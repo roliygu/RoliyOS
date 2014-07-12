@@ -1,7 +1,8 @@
-; hello-os
+; haribote-ipl
 ; TAB=4
 
 		CYLS	EQU		10		;定义CYLS=10,一种定义常量的语句
+
 		ORG		0x7c00			;指明程序装载的地址
 
 ; 以下这段是标准FAT12格式软盘专用代码
@@ -28,14 +29,17 @@
 		RESB	18				;空出18字节
 
 ;程序核心
+
 entry:
 		MOV		AX,0			
 		MOV		SS,AX
 		MOV		SP,0x7c00
 		MOV		DS,AX
-		MOV		ES,AX
+;本次注释掉的
+;		MOV		ES,AX
 
-		MOV		SI,msg		
+;本次注释掉的
+;		MOV		SI,msg		
 
 ; 本次添加的部分
 
@@ -76,9 +80,9 @@ next:
 		CMP 	CH,CYLS
 		JB 		readloop 		; 如果CH < CYLS,则跳转到readloop
 
-fin:
-		HLT						;让CPU停止，等待指令
-		JMP		fin				;无限循环
+; 将原来的fin函数移到外部sys文件里
+
+		JMP		0xc200
 
 error:
 		MOV SI,msg
@@ -91,6 +95,10 @@ putloop:
 		MOV		BX,16			;指定字符颜色
 		INT		0x10			;调用显卡BIOS
 		JMP		putloop
+fin:
+		HLT						; ‰½‚©‚ ‚é‚Ü‚ÅCPU‚ð’âŽ~‚³‚¹‚é
+		JMP		fin				; –³ŒÀƒ‹[ƒv
+		
 msg:
 		DB		0x0a, 0x0a		;两个换行
 		DB		"hello, Roliy"
