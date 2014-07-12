@@ -18,3 +18,7 @@ V1.1.5.1
 	修改了haribote.nas文件，使得调用后屏幕全黑
 V1.1.6
 	修改了haribote.nas文件，在进入32位状态前收集好BIOS信息，[因为进入32位状态后，再回来收集信息会很麻烦]
+V1.1.7
+	修改了haribote.nas文件，将其重命名为asmhead.nas，其包含了原来haribote.nas的汇编功能和将C的机器语言和汇编混合的功能
+	新增了bootpack.c文件，作为用C语言开发的基础
+	修改了Makfile文件，主要增加了将c文件编译成.hrb，然后和sys混编成img的处理
