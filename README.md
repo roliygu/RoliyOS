@@ -22,3 +22,7 @@ V1.1.7
 	修改了haribote.nas文件，将其重命名为asmhead.nas，其包含了原来haribote.nas的汇编功能和将C的机器语言和汇编混合的功能
 	新增了bootpack.c文件，作为用C语言开发的基础
 	修改了Makfile文件，主要增加了将c文件编译成.hrb，然后和sys混编成img的处理
+V1.1.8
+	增加了naskfunc.nas文件，其中包括HLT功能的汇编函数
+	修改了bootpack.c文件，直接调用naskfunc.nas里的汇编函数
+	修改Makefile，连接的时候，把naskfunc.nas文件连接到bootpack的中间文件里

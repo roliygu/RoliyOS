@@ -1,5 +1,7 @@
+void io_hlt(void);
+
 void HariMain(void){
 	fin:
-		//C语言里没有HLT，这里就只有无限循环咯
+		io_hlt();
 		goto fin; 
 }
