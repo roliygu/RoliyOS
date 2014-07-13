@@ -66,6 +66,7 @@ V2.1.6
 >run命令：将制作好的img（即镜像文件）导入虚拟机
 >>copy %.img ../z__tools/qemu/fdimage0.bin
 >>../z_tools/make.exe -C ../z_tools/qemu
+
 >install命令：将制作好的img镜像文件烧进软盘中
 >>../z_tools/imgtol.com w a: %.img
 
@@ -110,8 +111,93 @@ Version_1.0
 	RESB	4600
 	DB	0xf0, 0xff, 0xff, 0x00, 0x00, 0x00, 0x00, 0x00
 	RESB	1469432
-	
+
 说明
 ######
 	RESB命令将会空出对应数目的字节，并填0
 
+Version_1.1
+#####
+代码
+######
+	DB		0xeb, 0x4e, 0x90
+	DB		"HELLOIPL"		; 启动区的名称可以是任意8字节字符串
+	DW		512				;每个扇区的大小必须为512字节
+	DB		1				;簇的大小必须是一个扇区
+	DW		1				;FAT的起始位置从第一个扇区开始
+	DB		2				;FAT的个数必须为2
+	DW		224				;根目录大小设为224项
+	DW		2880			;磁盘大小必须为2880扇区
+	DB		0xf0			;磁盘种类
+	DW		9				;FAT的长度为9个扇区
+	DW		18				;一个磁道必须有18个扇区
+	DW		2				;磁头数必须为2
+	DD		0				;不使用分区，必须是0
+	DD		2880			;重写一次磁盘大小
+	DB		0,0,0x29		;意义不明，固定
+	DD		0xffffffff		;可能是卷标号码
+	DB		"HELLO-OS   "	;磁盘名称，11字节
+	DB		"FAT12   "		;磁盘格式名称，8字节
+	RESB	18				;空出18字节
+	;程序主体
+	DB		0xb8, 0x00, 0x00, 0x8e, 0xd0, 0xbc, 0x00, 0x7c
+	DB		0x8e, 0xd8, 0x8e, 0xc0, 0xbe, 0x74, 0x7c, 0x8a
+	DB		0x04, 0x83, 0xc6, 0x01, 0x3c, 0x00, 0x74, 0x09
+	DB		0xb4, 0x0e, 0xbb, 0x0f, 0x00, 0xcd, 0x10, 0xeb
+	DB		0xee, 0xf4, 0xeb, 0xfd
+	;信息显示部分
+	DB		0x0a, 0x0a		;两个换行
+	DB		"hello, Roliy"
+	DB		0x0a			;换行
+	DB		0
+	RESB	0x1fe-$			;填写0x00，直到0x001fe
+	DB		0x55, 0xaa
+	;以下是启动区以外部分的输出
+	DB		0xf0, 0xff, 0xff, 0x00, 0x00, 0x00, 0x00, 0x00
+	RESB	4600
+	DB		0xf0, 0xff, 0xff, 0x00, 0x00, 0x00, 0x00, 0x00
+	RESB	1469432
+
+说明
+######
+	'RESB 0x1fe-$'中的'$'符号代表了这一行在文件中是第几个字节
+	软盘的第一个扇区称作启动区，计算机会检查该扇区最后两个字节是否是'55AA'来判断该软盘是否是启动盘
+
+后续的代码就不详说了，接下来选择部分来说明
+#####
+汇编指令
+######
+* ORG 0x7c00 ：指明了将本程序装载到该内存地址
+* HLT ：让CPU停止动作，进入待机状态
+
+寄存器
+######
+>16位寄存器
+>>AX 累加寄存器,被ADD指令使用时，生成的机器码比其他短
+>>CX 计数寄存器
+>>DX 数据寄存器
+>>BX 基址寄存器
+>>SP 栈指针寄存器
+>>BP 基址指针寄存器
+>>SI 源变址寄存器
+>>DI 目的变址寄存器
+>>ES 附加段寄存器
+>>CS 代码段寄存器
+>>SS 栈段寄存器
+>>DS 数据段寄存器
+
+>AX,CX,DX,BX可以被拆成高低8位寄存器
+
+>EAX,ECX,EDX,EBX,ESP,EBP,ESI,EDI为32位寄存器
+
+BIOS的命令
+######
+显示一个字符
+#######
+	AH=0x0e
+	AL=character code
+	BH=0
+	BL=color code
+	INT 0x10
+
+	
