@@ -61,14 +61,33 @@ V2.1.6
 ###
 	这个projet来源于《30天自制操作系统》一书，也是为了锻炼一下底层编程和管理多个源文件的能力
 	这里的笔记先按照章节的顺序整理一下，之后再考虑其他更好的整理方式
-命令行操作
+
+Makefile
 ###
+命令
+####
 >run命令：将制作好的img（即镜像文件）导入虚拟机
->>copy %.img ../z__tools/qemu/fdimage0.bin
+>>copy %.img ../z__tools/qemu/fdimage0.bin<br>
 >>../z_tools/make.exe -C ../z_tools/qemu
 
 >install命令：将制作好的img镜像文件烧进软盘中
 >>../z_tools/imgtol.com w a: %.img
+
+>nask命令：将[.nas,]编译成[.bin,]文件
+>>../z_tools/nase.exe %.nas %.bin
+
+>edimg命令：将[.bin,.sys,]文件编译成img文件
+>>../z_tools/edimg.exe imgin:../z_tools/fdimg0at.tek wbing src:%.bin len:512
+>>from:0 to:0 imgout: %.img
+
+Makefile格式
+####
+* 输出文件 : 输入文件 Makefile
+* ../z_tools/xxx.exe xxxx xxxx
+* 使用make命令来生成目标文件时，使用`make -r xxx`将会递归式的生成xxx
+* 使用%来代替文件名，以此写出的命令将按后缀名匹配文件来make
+
+
 
 Chapter 1
 ###
@@ -160,8 +179,8 @@ Version_1.1
 
 说明
 ######
-	'RESB 0x1fe-$'中的'$'符号代表了这一行在文件中是第几个字节
-	软盘的第一个扇区称作启动区，计算机会检查该扇区最后两个字节是否是'55AA'来判断该软盘是否是启动盘
+	`RESB 0x1fe-$`中的`$`符号代表了这一行在文件中是第几个字节
+	软盘的第一个扇区称作启动区，计算机会检查该扇区最后两个字节是否是`55AA`来判断该软盘是否是启动盘
 
 后续的代码就不详说了，接下来选择部分来说明
 #####
@@ -173,18 +192,18 @@ Version_1.1
 寄存器
 ######
 >16位寄存器
->>AX 累加寄存器,被ADD指令使用时，生成的机器码比其他短
->>CX 计数寄存器
->>DX 数据寄存器
->>BX 基址寄存器
->>SP 栈指针寄存器
->>BP 基址指针寄存器
->>SI 源变址寄存器
->>DI 目的变址寄存器
->>ES 附加段寄存器
->>CS 代码段寄存器
->>SS 栈段寄存器
->>DS 数据段寄存器
+>>AX 累加寄存器,被ADD指令使用时，生成的机器码比其他短<br>
+>>CX 计数寄存器<br>
+>>DX 数据寄存器<br>
+>>BX 基址寄存器<br>
+>>SP 栈指针寄存器<br>
+>>BP 基址指针寄存器<br>
+>>SI 源变址寄存器<br>
+>>DI 目的变址寄存器<br>
+>>ES 附加段寄存器<br>
+>>CS 代码段寄存器<br>
+>>SS 栈段寄存器<br>
+>>DS 数据段寄存器<br>
 
 >AX,CX,DX,BX可以被拆成高低8位寄存器
 
