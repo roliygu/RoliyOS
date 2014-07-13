@@ -42,3 +42,11 @@ V2.1.3
 #######
 	修改了bootpack.c文件，增加了调色板设置
 	修改了naskfunc.nas文件，增加了往端口读写数据的函数，和读写标志寄存去Eflags的函数
+V2.1.4
+#######
+	修改了bootpack.c文件，增加了画出矩形的函数
+V2.1.5
+#######
+	增加了hankaku文件：ASCII字符库
+	修改了Makefile文件，在编译时将字符库文件一起编译
+	修改了bootpack.c文件，成功输出“Roliy”
