@@ -235,7 +235,7 @@ RoliyOS-My small OS
 * makefont(%.txt, %.bin)
 * bin2obj(%.bin, %.obj)
 * edimg(%.bin, [%.sys,] %.img)
-* 具体的转换过程参考[此图](\\图示\\文件编译图.bmp)
+* 具体的转换过程参考[此图](/图示/文件编译图.bmp)
 
 ###注意
 * 磁盘上的内容从内存的0x8000号地址开始装载
