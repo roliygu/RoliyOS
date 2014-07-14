@@ -35,11 +35,6 @@ entry:
 		MOV		SS,AX
 		MOV		SP,0x7c00
 		MOV		DS,AX
-;本次注释掉的
-;		MOV		ES,AX
-
-;本次注释掉的
-;		MOV		SI,msg		
 
 ; 本次添加的部分
 
@@ -96,8 +91,8 @@ putloop:
 		INT		0x10			;调用显卡BIOS
 		JMP		putloop
 fin:
-		HLT						; ‰½‚©‚ ‚é‚Ü‚ÅCPU‚ð’âŽ~‚³‚¹‚é
-		JMP		fin				; –³ŒÀƒ‹[ƒv
+		HLT						
+		JMP		fin				
 
 msg:
 		DB		0x0a, 0x0a		;两个换行
