@@ -230,3 +230,5 @@ RoliyOS-My small OS
 ###V3.1.2
 	新增int.c文件，初始化PIC
 	修改bootpack.c,bootpack.h和Makefile文件来编译
+###V3.1.3
+	修改了naskfunc.nas,dsctbl.c,bootpack.h,bottpack.c,int.c文件，增加了处理键盘中断的部分
