@@ -133,8 +133,35 @@ RoliyOS-My small OS
 	* 执行RET语句时，EAX中的值被当作函数的返回值
 	* 标志寄存器的值不能直接传到其他寄存器，需要借助栈
 
-
 * hankaku.txt  : 字库文件
+
+####GDT 全局段号记录表
+* 内存分段模式下，每个段使用一个数据结构Segment来唯一表示，该数据结构包括：
+	* 段大小
+	* 段起始地址
+	* 段管理属性[禁止写入，禁止执行，系统专用]
+	这部分内容，大小一共是8个字节(64bits)
+* 段寄存器只有16位,无法装下Segment,所以使用GDT(作为检索表)来使用某个段
+	* 段寄存器低3位无法使用，故只能表示8192个段
+	* 段寄存器存的是`段号`
+	* 系统根据`段号`到GDT中查找实际的`Segment`
+* 大致可以认为，GDT是一个表，表的每项包括[段号,对应的Segment]
+* GDT的起始地址保存在GDTR寄存器中
+* Segment{limit_low, base_low;base_mid, access_right;limit_hign, base_high;}
+	* 段地址为32位，分成base_low,base_mid和base_high三段
+	* 段(大小)上限为4G，分为limit_low和limit_high两部分，注意单位是页(4KB)，limit_high只用高4位
+	* 权限一共12位，高位4位放在limit_high的高4位，低位8位放在access_right中
+		* 高四位的第一位取0或1对应将段上限解释为以字节和页为单位
+		* 低8位
+			* 0x00 	未使用
+			* 0x92  系统专用，可读写，不可执行
+			* 0x9a 	系统专用，可执行，可读不可写
+			* 0xf2 	应用程序用，可读写，不可执行
+			* 0xfa 	应用程序用，可执行，可读不可写
+
+####IDT 中断记录表
+####PIC 可编程中断控制器
+
 
 ###各个文件转换的过程,函数名是调用的程序，参数的最后一个是输出文件，其他都是输入文件
 * ccl(%.c, %gas)
@@ -200,3 +227,6 @@ RoliyOS-My small OS
 ###V3.1.1
 	将bootpack.c文件按功能分成了bootpack.c,dsctbl.c和graphic.c三个文件
 	修改了Makefile文件,支持分割以后的文件的编译
+###V3.1.2
+	新增int.c文件，初始化PIC
+	修改bootpack.c,bootpack.h和Makefile文件来编译
