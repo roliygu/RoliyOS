@@ -19,8 +19,8 @@ void HariMain(void){
 	sprintf(s, "(%d, %d)", mx, my);
 	putfonts8_asc(binfo->vram, binfo->scrnx, 0, 0, COL8_FFFFFF, s);
 
-	io_out8(PIC0_IMR, 0xf9); // PIC1‚ÆƒL[ƒ{[ƒh‚ð‹–‰Â(11111001) 
-	io_out8(PIC1_IMR, 0xef); // ƒ}ƒEƒX‚ð‹–‰Â(11101111) 
+	io_out8(PIC0_IMR, 0xf9); 
+	io_out8(PIC1_IMR, 0xef);
 
 	for(;;){
 		io_hlt();

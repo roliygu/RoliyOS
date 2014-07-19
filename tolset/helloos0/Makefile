@@ -53,7 +53,7 @@ haribote.img : ipl10.bin haribote.sys Makefile
 		copy from:haribote.sys to:@: \
 		imgout:haribote.img
 
-#
+# 使用通配符
 
 %.gas : %.c Makefile
 	$(CC1) -o $*.gas $*.c

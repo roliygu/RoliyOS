@@ -21,7 +21,7 @@ void asm_inthandler2c(void);
 
 // graphic.c
 void init_palette(void);
-void set_palette(int end, unsigned char *rgb);
+void set_palette(unsigned char *rgb);
 void boxfill8(unsigned char *vram, int xsize, unsigned char c, int x0, int y0, int x1, int y1);
 void init_screen8(char *vram, int x, int y);
 void putfont8(char *vram, int xsize, int x, int y, char c, char *font);
@@ -45,6 +45,7 @@ void putblock8_8(char *vram, int vxsize, int pxsize,
 #define COL8_840084		13
 #define COL8_008484		14
 #define COL8_848484		15
+
 
 // dsctbl.c 
 struct SEGMENT_DESCRIPTOR {

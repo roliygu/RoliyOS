@@ -19,18 +19,17 @@ void init_palette(void){
 		0x00, 0x84, 0x84,	// 14:浅暗蓝
 		0x84, 0x84, 0x84	// 15:暗灰
 	};
-	set_palette(15, table_rgb);
+	set_palette(table_rgb);
 	return;
-	//C语言中的static char语句只用于数据，相当于汇编中的DB
 }
 
-void set_palette(int end, unsigned char *rgb){
+void set_palette(unsigned char *rgb){
 	int i, eflags;
 	eflags = io_load_eflags();	// 记录中断许可标志的值
 	io_cli(); 					// 将中断许可标志置为0，禁止中断
-	io_out8(0x03c8, 0);
-	for (i = 0; i <= end; i++) {
-		io_out8(0x03c9, rgb[0] / 4);
+	io_out8(0x03c8, 0); 		// 设置显卡
+	for (i = 0; i <= 15; i++) {
+		io_out8(0x03c9, rgb[0] / 4); // 设置R，G，B值
 		io_out8(0x03c9, rgb[1] / 4);
 		io_out8(0x03c9, rgb[2] / 4);
 		rgb += 3;
@@ -49,6 +48,7 @@ void boxfill8(unsigned char *vram, int xsize, unsigned char c, int x0, int y0, i
 }
 
 void init_screen8(char *vram, int x, int y){
+	//绘制桌面
 	boxfill8(vram, x, COL8_008484,  0,     0,      x -  1, y - 29);
 	boxfill8(vram, x, COL8_C6C6C6,  0,     y - 28, x -  1, y - 28);
 	boxfill8(vram, x, COL8_FFFFFF,  0,     y - 27, x -  1, y - 27);
@@ -69,25 +69,26 @@ void init_screen8(char *vram, int x, int y){
 }
 
 void putfont8(char *vram, int xsize, int x, int y, char c, char *font){
+	// 打印单个字符
 	int i;
 	char *p, d;
 	for (i = 0; i < 16; i++) {
 		p = vram + (y + i) * xsize + x;
 		d = font[i];
-		if ((d & 0x80) != 0) { p[0] = c; }
-		if ((d & 0x40) != 0) { p[1] = c; }
-		if ((d & 0x20) != 0) { p[2] = c; }
-		if ((d & 0x10) != 0) { p[3] = c; }
-		if ((d & 0x08) != 0) { p[4] = c; }
-		if ((d & 0x04) != 0) { p[5] = c; }
-		if ((d & 0x02) != 0) { p[6] = c; }
-		if ((d & 0x01) != 0) { p[7] = c; }
+		if ((d & 0x80) != 0)  p[0] = c; 
+		if ((d & 0x40) != 0)  p[1] = c; 
+		if ((d & 0x20) != 0)  p[2] = c; 
+		if ((d & 0x10) != 0)  p[3] = c; 
+		if ((d & 0x08) != 0)  p[4] = c; 
+		if ((d & 0x04) != 0)  p[5] = c; 
+		if ((d & 0x02) != 0)  p[6] = c; 
+		if ((d & 0x01) != 0)  p[7] = c; 
 	}
 	return;
 }
 
-void putfonts8_asc(char *vram, int xsize, int x, int y, char c, unsigned char *s)
-{
+void putfonts8_asc(char *vram, int xsize, int x, int y, char c, unsigned char *s){
+	// 打印字符串
 	extern char hankaku[4096];
 	for (; *s != 0x00; s++) {
 		putfont8(vram, xsize, x, y, c, hankaku + *s * 16);
@@ -97,8 +98,9 @@ void putfonts8_asc(char *vram, int xsize, int x, int y, char c, unsigned char *s
 }
 
 void init_mouse_cursor8(char *mouse, char bc){
-	//鼠标指针
+	// 初始化鼠标,bc是BackColor
 	static char cursor[16][16] = {
+		// 鼠标指针
 		"**************..",
 		"*OOOOOOOOOOO*...",
 		"*OOOOOOOOOO*....",
@@ -135,6 +137,7 @@ void init_mouse_cursor8(char *mouse, char bc){
 
 void putblock8_8(char *vram, int vxsize, int pxsize,
 	int pysize, int px0, int py0, char *buf, int bxsize){
+	// 显示鼠标图标
 	int x, y;
 	for (y = 0; y < pysize; y++) {
 		for (x = 0; x < pxsize; x++) {
