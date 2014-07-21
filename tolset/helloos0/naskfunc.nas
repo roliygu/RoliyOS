@@ -94,7 +94,7 @@ _load_idtr:		; void load_idtr(int limit, int addr);
 _asm_inthandler21:
 		PUSH	ES
 		PUSH	DS
-		PUSHAD
+		PUSHAD  ;将所有寄存器的值都push
 		MOV		EAX,ESP
 		PUSH	EAX
 		MOV		AX,SS
@@ -102,7 +102,7 @@ _asm_inthandler21:
 		MOV		ES,AX
 		CALL	_inthandler21
 		POP		EAX
-		POPAD
+		POPAD   ;PUSHAD的反操作
 		POP		DS
 		POP		ES
 		IRETD

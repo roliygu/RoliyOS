@@ -1,3 +1,6 @@
+#ifndef BOOTPACK
+#define BOOTPACK
+
 // asmhead.nas
 struct BOOTINFO {
 	char cyls, leds, vmode, reserve;
@@ -46,6 +49,29 @@ void putblock8_8(char *vram, int vxsize, int pxsize,
 #define COL8_008484		14
 #define COL8_848484		15
 
+// datastructure.c
+typedef unsigned char Type;
+struct Queue {
+
+	Type *buf;
+	int start, end, size, free, flags;
+};
+void que_init(struct Queue *Q, int size, Type *buf);
+int que_push(struct Queue *Q, Type data);
+int que_pop(struct Queue *Q);
+int que_status(struct Queue *Q);
+
+// equipment.c
+void wait_KBC_sendready(void);
+void init_keyboard(void);
+void enable_mouse(void);
+#define PORT_KEYSTA				0x0064    //设备编码
+#define PORT_KEYCMD				0x0064
+#define KEYSTA_SEND_NOTREADY	0x02      // 这个只是构造出来为了检测第二位是否为0
+#define KEYCMD_WRITE_MODE		0x60 	  // 模式设定
+#define KBC_MODE				0x47 	  // 利用鼠标模式
+#define KEYCMD_SENDTO_MOUSE		0xd4
+#define MOUSECMD_ENABLE			0xf4
 
 // dsctbl.c 
 struct SEGMENT_DESCRIPTOR {
@@ -88,3 +114,6 @@ void inthandler2c(int *esp);
 #define PIC1_ICW2		0x00a1
 #define PIC1_ICW3		0x00a1
 #define PIC1_ICW4		0x00a1
+#define PORT_KEYDAT     0x0060  // (固定的)键盘/鼠标设备的内存/端口
+
+#endif

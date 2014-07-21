@@ -182,6 +182,9 @@ RoliyOS-My small OS
 * `RESB 0x1fe-$`中的`$`符号代表了这一行在文件中是第几个字节
 * 软盘的第一个扇区称作启动区，计算机会检查该扇区最后两个字节是否是`55AA`来判断该软盘是否是启动盘
 
+###键盘控制电路，键盘和鼠标
+
+
 版本说明：
 --------
 ###V1.1.3
@@ -232,3 +235,8 @@ RoliyOS-My small OS
 	修改bootpack.c,bootpack.h和Makefile文件来编译
 ###V3.1.3
 	修改了naskfunc.nas,dsctbl.c,bootpack.h,bottpack.c,int.c文件，增加了处理键盘中断的部分
+###V4.1
+	详细处理了键盘和鼠标中断:完成从按键到屏幕显示的实现
+	增加了两个文件：
+		equipment.c是鼠标和键盘准备的函数，之后可能会混合仅int.c中
+		datastructure.c基础数据结构，目前实现了`队列`，用作鼠标键盘缓冲区
