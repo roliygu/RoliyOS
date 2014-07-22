@@ -52,7 +52,6 @@ void putblock8_8(char *vram, int vxsize, int pxsize,
 // datastructure.c
 typedef unsigned char Type;
 struct Queue {
-
 	Type *buf;
 	int start, end, size, free, flags;
 };
@@ -62,9 +61,20 @@ int que_pop(struct Queue *Q);
 int que_status(struct Queue *Q);
 
 // equipment.c
+struct MOUSE_DEC{
+	// 每次三个字节的数据表示鼠标状态
+	// 第一个字节的前四位表示移动,点击[左键,右键,中键]
+	// 第二第三字节表示横轴和纵轴偏移量
+	// phase是接收过程中用于区分是第几个的标记位
+	unsigned char buf[3],phase;
+	int x, y, btn;
+};
+void inthandler21(int *esp);
+void inthandler2c(int *esp);
 void wait_KBC_sendready(void);
 void init_keyboard(void);
 void enable_mouse(void);
+int mouse_decode(struct MOUSE_DEC *mdec, unsigned char dat);
 #define PORT_KEYSTA				0x0064    //设备编码
 #define PORT_KEYCMD				0x0064
 #define KEYSTA_SEND_NOTREADY	0x02      // 这个只是构造出来为了检测第二位是否为0
@@ -99,9 +109,7 @@ void set_gatedesc(struct GATE_DESCRIPTOR *gd, int offset, int selector, int ar);
 
 //inc.c
 void init_pic(void);
-void inthandler21(int *esp);
 void inthandler27(int *esp);
-void inthandler2c(int *esp);
 #define PIC0_ICW1		0x0020
 #define PIC0_OCW2		0x0020
 #define PIC0_IMR		0x0021

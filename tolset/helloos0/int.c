@@ -19,27 +19,6 @@ void init_pic(void){
 
 	return;
 }
-
-struct Queue keyfifo，mousefifo;
-
-void inthandler21(int *esp){
-	//来自PS/键盘的中断,每按一个键显示两个编码
-	//一个表示键被按下，一个表示松开
-	unsigned char data;
-	io_out8(PIC0_OCW2, 0x61);	// 将"0x61"发送给OCW2,表示已经接到IRQ1中断，可以继续接收其他中断
-	data = io_in8(PORT_KEYDAT);
-	que_push(&keyfifo, data);
-	return;
-}
-void inthandler2c(int *esp){
-	//来自PS/鼠标的中断
-	unsigned char data;
-	io_out8(PIC1_OCW2, 0x64);
-	io_out8(PIC0_OCW2, 0x62);
-	data = io_in8(PORT_KEYDAT);
-	que_push(&mousefifo, data);
-	return;
-}
 void inthandler27(int *esp){
 	io_out8(PIC0_OCW2, 0x67);  
 	return;

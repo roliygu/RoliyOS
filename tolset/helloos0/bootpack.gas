@@ -2,6 +2,8 @@
 	.data
 LC0:
 	.ascii "(%d, %d)\0"
+LC2:
+	.ascii "[lcr %4d %4d]\0"
 LC1:
 	.ascii "%02X\0"
 	.text
@@ -14,8 +16,8 @@ _HariMain:
 	pushl	%edi
 	pushl	%esi
 	pushl	%ebx
-	leal	-316(%ebp), %ebx
-	subl	$464, %esp
+	movl	$2, %ebx
+	subl	$484, %esp
 	call	_init_gdtidt
 	call	_init_pic
 	call	_io_sti
@@ -44,21 +46,21 @@ _HariMain:
 	pushl	%eax
 	pushl	4088
 	call	_init_screen8
-	movl	$2, %ecx
 	movswl	4084,%eax
-	leal	-16(%eax), %edx
-	movl	%edx, %eax
+	leal	-16(%eax), %ecx
+	movl	%ecx, %eax
 	cltd
-	idivl	%ecx
-	movswl	4086,%edx
-	subl	$44, %edx
+	idivl	%ebx
 	movl	%eax, %edi
-	movl	%edx, %eax
+	movswl	4086,%eax
 	pushl	$14
+	leal	-44(%eax), %ecx
+	movl	%ecx, %eax
 	cltd
-	idivl	%ecx
-	pushl	%ebx
+	idivl	%ebx
+	leal	-316(%ebp), %ebx
 	movl	%eax, %esi
+	pushl	%ebx
 	call	_init_mouse_cursor8
 	pushl	$16
 	pushl	%ebx
@@ -96,14 +98,14 @@ L2:
 	call	_que_status
 	leal	(%eax,%ebx), %eax
 	popl	%ebx
-	popl	%esi
+	popl	%edx
 	testl	%eax, %eax
-	je	L11
+	je	L20
 	pushl	$_keyfifo
 	call	_que_status
 	popl	%ecx
 	testl	%eax, %eax
-	jne	L12
+	jne	L21
 	pushl	$_mousefifo
 	call	_que_status
 	popl	%edx
@@ -113,13 +115,31 @@ L2:
 	call	_que_pop
 	movl	%eax, %ebx
 	call	_io_sti
-	pushl	%ebx
-	leal	-60(%ebp), %ebx
-	pushl	$LC1
-	pushl	%ebx
+	movzbl	%bl, %eax
+	pushl	%eax
+	leal	-492(%ebp), %eax
+	pushl	%eax
+	call	_mouse_decode
+	addl	$12, %esp
+	testl	%eax, %eax
+	je	L2
+	pushl	-484(%ebp)
+	pushl	-488(%ebp)
+	pushl	$LC2
+	leal	-60(%ebp), %eax
+	pushl	%eax
 	call	_sprintf
+	addl	$16, %esp
+	movl	-480(%ebp), %eax
+	movb	$108, -59(%ebp)
+	movb	$99, -58(%ebp)
+	movb	$114, -57(%ebp)
+	testl	$1, %eax
+	je	L11
+	movb	$76, -59(%ebp)
+L12:
 	pushl	$31
-	pushl	$47
+	pushl	$151
 	pushl	$16
 	pushl	$32
 	pushl	$14
@@ -127,19 +147,77 @@ L2:
 	pushl	%eax
 	pushl	4088
 	call	_boxfill8
-	addl	$44, %esp
-	pushl	%ebx
+	leal	-60(%ebp), %eax
+	pushl	%eax
 	pushl	$7
 	pushl	$16
 	pushl	$32
-L10:
 	movswl	4084,%eax
 	pushl	%eax
 	pushl	4088
 	call	_putfonts8_asc
-	addl	$24, %esp
+	leal	15(%esi), %eax
+	addl	$52, %esp
+	pushl	%eax
+	leal	15(%edi), %eax
+	pushl	%eax
+	pushl	%esi
+	pushl	%edi
+	pushl	$14
+	movswl	4084,%eax
+	pushl	%eax
+	pushl	4088
+	call	_boxfill8
+	addl	$28, %esp
+	addl	-484(%ebp), %esi
+	addl	-488(%ebp), %edi
+	js	L22
+L16:
+	testl	%esi, %esi
+	js	L23
+L17:
+	movswl	4084,%eax
+	subl	$16, %eax
+	cmpl	%eax, %edi
+	jle	L18
+	movl	%eax, %edi
+L18:
+	movswl	4086,%eax
+	subl	$16, %eax
+	cmpl	%eax, %esi
+	jle	L19
+	movl	%eax, %esi
+L19:
+	pushl	$16
+	leal	-316(%ebp), %eax
+	pushl	%eax
+	pushl	%esi
+	pushl	%edi
+	pushl	$16
+	pushl	$16
+	movswl	4084,%eax
+	pushl	%eax
+	pushl	4088
+	call	_putblock8_8
+	addl	$32, %esp
 	jmp	L2
-L12:
+L23:
+	xorl	%esi, %esi
+	jmp	L17
+L22:
+	xorl	%edi, %edi
+	jmp	L16
+L11:
+	testl	$2, %eax
+	je	L13
+	movb	$82, -57(%ebp)
+	jmp	L12
+L13:
+	andl	$4, %eax
+	je	L12
+	movb	$67, -58(%ebp)
+	jmp	L12
+L21:
 	pushl	$_keyfifo
 	call	_que_pop
 	movl	%eax, %ebx
@@ -163,10 +241,16 @@ L12:
 	pushl	$7
 	pushl	$16
 	pushl	$0
-	jmp	L10
-L11:
+	movswl	4084,%eax
+	pushl	%eax
+	pushl	4088
+	call	_putfonts8_asc
+	addl	$24, %esp
+	jmp	L2
+L20:
 	call	_io_stihlt
 	jmp	L2
+	.def	_mouse_decode;	.scl	2;	.type	32;	.endef
 	.def	_boxfill8;	.scl	2;	.type	32;	.endef
 	.def	_que_pop;	.scl	2;	.type	32;	.endef
 	.def	_io_stihlt;	.scl	2;	.type	32;	.endef
