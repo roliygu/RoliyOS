@@ -83,6 +83,25 @@ int mouse_decode(struct MOUSE_DEC *mdec, unsigned char dat);
 #define KEYCMD_SENDTO_MOUSE		0xd4
 #define MOUSECMD_ENABLE			0xf4
 
+// memory.c
+#define MEMMAN_FREES 			4090
+struct FREEINFO{
+	// 使用块起始地址和块大小来表示某段内存
+	unsigned int addr, size;
+};
+
+struct MEMMAN{
+	// frees:可用块数，maxfrees:frees最大值
+	// lostsize:释放失败的内存大小总和 losts:失败次数
+	int frees, maxfrees, lostsize, losts;
+	struct FREEINFO free[MEMMAN_FREES];
+};
+
+void memman_init(struct MEMMAN *man);
+unsigned int memman_total(struct MEMMAN *man);
+unsigned int memman_alloc(struct MEMMAN *man, unsigned int size);
+int memman_free(struct MEMMAN *man, unsigned int addr, unsigned int size);
+
 // dsctbl.c 
 struct SEGMENT_DESCRIPTOR {
 	short limit_low, base_low;
