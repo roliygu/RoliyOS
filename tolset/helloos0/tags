@@ -1,0 +1,135 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.8	//
+ADR_BOOTINFO	.\bootpack.h	10;"	d
+ADR_BOTPAK	.\bootpack.h	123;"	d
+ADR_GDT	.\bootpack.h	121;"	d
+ADR_IDT	.\bootpack.h	119;"	d
+AR_CODE32_ER	.\bootpack.h	126;"	d
+AR_DATA32_RW	.\bootpack.h	125;"	d
+AR_INTGATE32	.\bootpack.h	127;"	d
+BOOTINFO	.\bootpack.h	/^struct BOOTINFO {$/;"	s
+BOOTPACK	.\bootpack.h	2;"	d
+COL8_000000	.\bootpack.h	35;"	d
+COL8_000084	.\bootpack.h	47;"	d
+COL8_0000FF	.\bootpack.h	39;"	d
+COL8_008400	.\bootpack.h	45;"	d
+COL8_008484	.\bootpack.h	49;"	d
+COL8_00FF00	.\bootpack.h	37;"	d
+COL8_00FFFF	.\bootpack.h	41;"	d
+COL8_840000	.\bootpack.h	44;"	d
+COL8_840084	.\bootpack.h	48;"	d
+COL8_848400	.\bootpack.h	46;"	d
+COL8_848484	.\bootpack.h	50;"	d
+COL8_C6C6C6	.\bootpack.h	43;"	d
+COL8_FF0000	.\bootpack.h	36;"	d
+COL8_FF00FF	.\bootpack.h	40;"	d
+COL8_FFFF00	.\bootpack.h	38;"	d
+COL8_FFFFFF	.\bootpack.h	42;"	d
+CR0_CACHE_DISABLE	.\bootpack.c	7;"	d	file:
+EFLAGS_AC_BIT	.\bootpack.c	6;"	d	file:
+FLAGS_OVERRUN	.\datastructure.c	3;"	d	file:
+FREEINFO	.\bootpack.h	/^struct FREEINFO{$/;"	s
+GATE_DESCRIPTOR	.\bootpack.h	/^struct GATE_DESCRIPTOR {$/;"	s
+HariMain	.\bootpack.c	/^void HariMain(void){$/;"	f
+KBC_MODE	.\bootpack.h	82;"	d
+KEYCMD_SENDTO_MOUSE	.\bootpack.h	83;"	d
+KEYCMD_WRITE_MODE	.\bootpack.h	81;"	d
+KEYSTA_SEND_NOTREADY	.\bootpack.h	80;"	d
+LIMIT_BOTPAK	.\bootpack.h	124;"	d
+LIMIT_GDT	.\bootpack.h	122;"	d
+LIMIT_IDT	.\bootpack.h	120;"	d
+MEMMAN	.\bootpack.h	/^struct MEMMAN{$/;"	s
+MEMMAN_FREES	.\bootpack.h	87;"	d
+MOUSECMD_ENABLE	.\bootpack.h	84;"	d
+MOUSE_DEC	.\bootpack.h	/^struct MOUSE_DEC{$/;"	s
+PIC0_ICW1	.\bootpack.h	132;"	d
+PIC0_ICW2	.\bootpack.h	135;"	d
+PIC0_ICW3	.\bootpack.h	136;"	d
+PIC0_ICW4	.\bootpack.h	137;"	d
+PIC0_IMR	.\bootpack.h	134;"	d
+PIC0_OCW2	.\bootpack.h	133;"	d
+PIC1_ICW1	.\bootpack.h	138;"	d
+PIC1_ICW2	.\bootpack.h	141;"	d
+PIC1_ICW3	.\bootpack.h	142;"	d
+PIC1_ICW4	.\bootpack.h	143;"	d
+PIC1_IMR	.\bootpack.h	140;"	d
+PIC1_OCW2	.\bootpack.h	139;"	d
+PORT_KEYCMD	.\bootpack.h	79;"	d
+PORT_KEYDAT	.\bootpack.h	144;"	d
+PORT_KEYSTA	.\bootpack.h	78;"	d
+Queue	.\bootpack.h	/^struct Queue {$/;"	s
+SEGMENT_DESCRIPTOR	.\bootpack.h	/^struct SEGMENT_DESCRIPTOR {$/;"	s
+Type	.\bootpack.h	/^typedef unsigned char Type;$/;"	t
+access_right	.\bootpack.h	/^	char base_mid, access_right;$/;"	m	struct:SEGMENT_DESCRIPTOR
+access_right	.\bootpack.h	/^	char dw_count, access_right;$/;"	m	struct:GATE_DESCRIPTOR
+addr	.\bootpack.h	/^	unsigned int addr, size;$/;"	m	struct:FREEINFO
+base_high	.\bootpack.h	/^	char limit_high, base_high;$/;"	m	struct:SEGMENT_DESCRIPTOR
+base_low	.\bootpack.h	/^	short limit_low, base_low;$/;"	m	struct:SEGMENT_DESCRIPTOR
+base_mid	.\bootpack.h	/^	char base_mid, access_right;$/;"	m	struct:SEGMENT_DESCRIPTOR
+boxfill8	.\graphic.c	/^void boxfill8(unsigned char *vram, int xsize, unsigned char c, int x0, int y0, int x1, int y1){$/;"	f
+btn	.\bootpack.h	/^	int x, y, btn;$/;"	m	struct:MOUSE_DEC
+buf	.\bootpack.h	/^	Type *buf;$/;"	m	struct:Queue
+buf	.\bootpack.h	/^	unsigned char buf[3],phase;$/;"	m	struct:MOUSE_DEC
+cyls	.\bootpack.h	/^	char cyls, leds, vmode, reserve;$/;"	m	struct:BOOTINFO
+dw_count	.\bootpack.h	/^	char dw_count, access_right;$/;"	m	struct:GATE_DESCRIPTOR
+enable_mouse	.\equipment.c	/^void enable_mouse(void){$/;"	f
+end	.\bootpack.h	/^	int start, end, size, free, flags;$/;"	m	struct:Queue
+flags	.\bootpack.h	/^	int start, end, size, free, flags;$/;"	m	struct:Queue
+free	.\bootpack.h	/^	int start, end, size, free, flags;$/;"	m	struct:Queue
+free	.\bootpack.h	/^	struct FREEINFO free[MEMMAN_FREES];$/;"	m	struct:MEMMAN	typeref:struct:MEMMAN::FREEINFO
+frees	.\bootpack.h	/^	int frees, maxfrees, lostsize, losts;$/;"	m	struct:MEMMAN
+init_gdtidt	.\dsctbl.c	/^void init_gdtidt(void){$/;"	f
+init_keyboard	.\equipment.c	/^void init_keyboard(void){$/;"	f
+init_mouse_cursor8	.\graphic.c	/^void init_mouse_cursor8(char *mouse, char bc){$/;"	f
+init_palette	.\graphic.c	/^void init_palette(void){$/;"	f
+init_pic	.\int.c	/^void init_pic(void){$/;"	f
+init_que	.\datastructureMy.c	/^bool init_que(struct Queue *Q){$/;"	f
+init_screen8	.\graphic.c	/^void init_screen8(char *vram, int x, int y){$/;"	f
+inthandler21	.\equipment.c	/^void inthandler21(int *esp){$/;"	f
+inthandler27	.\int.c	/^void inthandler27(int *esp){$/;"	f
+inthandler2c	.\equipment.c	/^void inthandler2c(int *esp){$/;"	f
+keyfifo	.\equipment.c	/^struct Queue keyfifo, mousefifo;$/;"	v	typeref:struct:Queue
+leds	.\bootpack.h	/^	char cyls, leds, vmode, reserve;$/;"	m	struct:BOOTINFO
+limit_high	.\bootpack.h	/^	char limit_high, base_high;$/;"	m	struct:SEGMENT_DESCRIPTOR
+limit_low	.\bootpack.h	/^	short limit_low, base_low;$/;"	m	struct:SEGMENT_DESCRIPTOR
+losts	.\bootpack.h	/^	int frees, maxfrees, lostsize, losts;$/;"	m	struct:MEMMAN
+lostsize	.\bootpack.h	/^	int frees, maxfrees, lostsize, losts;$/;"	m	struct:MEMMAN
+maxfrees	.\bootpack.h	/^	int frees, maxfrees, lostsize, losts;$/;"	m	struct:MEMMAN
+memman_alloc	.\memory.c	/^unsigned int memman_alloc(struct MEMMAN *man, unsigned int size){$/;"	f
+memman_free	.\memory.c	/^int memman_free(struct MEMMAN *man, unsigned int addr, unsigned int size){$/;"	f
+memman_init	.\memory.c	/^void memman_init(struct MEMMAN *man){$/;"	f
+memman_total	.\memory.c	/^unsigned int memman_total(struct MEMMAN *man){$/;"	f
+memtest	.\bootpack.c	/^unsigned int memtest(unsigned int start, unsigned int end){$/;"	f
+mouse_decode	.\equipment.c	/^int mouse_decode(struct MOUSE_DEC *mdec, unsigned char dat){$/;"	f
+mousefifo	.\equipment.c	/^struct Queue keyfifo, mousefifo;$/;"	v	typeref:struct:
+offset_high	.\bootpack.h	/^	short offset_high;$/;"	m	struct:GATE_DESCRIPTOR
+offset_low	.\bootpack.h	/^	short offset_low, selector;$/;"	m	struct:GATE_DESCRIPTOR
+phase	.\bootpack.h	/^	unsigned char buf[3],phase;$/;"	m	struct:MOUSE_DEC
+pop_que	.\datastructureMy.c	/^bool pop_que(struct Queue *Q, Type *ele){$/;"	f
+push_que	.\datastructureMy.c	/^bool push_que(struct Queue *Q, Type ele){$/;"	f
+putblock8_8	.\graphic.c	/^void putblock8_8(char *vram, int vxsize, int pxsize,$/;"	f
+putfont8	.\graphic.c	/^void putfont8(char *vram, int xsize, int x, int y, char c, char *font){$/;"	f
+putfonts8_asc	.\graphic.c	/^void putfonts8_asc(char *vram, int xsize, int x, int y, char c, unsigned char *s){$/;"	f
+que_init	.\datastructure.c	/^void que_init(struct Queue *Q, int size, Type *buf){$/;"	f
+que_pop	.\datastructure.c	/^int que_pop(struct Queue *Q){$/;"	f
+que_push	.\datastructure.c	/^int que_push(struct Queue *Q, Type data){$/;"	f
+que_status	.\datastructure.c	/^int que_status(struct Queue *Q){$/;"	f
+reserve	.\bootpack.h	/^	char cyls, leds, vmode, reserve;$/;"	m	struct:BOOTINFO
+scrnx	.\bootpack.h	/^	short scrnx, scrny;$/;"	m	struct:BOOTINFO
+scrny	.\bootpack.h	/^	short scrnx, scrny;$/;"	m	struct:BOOTINFO
+selector	.\bootpack.h	/^	short offset_low, selector;$/;"	m	struct:GATE_DESCRIPTOR
+set_gatedesc	.\dsctbl.c	/^void set_gatedesc(struct GATE_DESCRIPTOR *gd, int offset, int selector, int ar){$/;"	f
+set_palette	.\graphic.c	/^void set_palette(unsigned char *rgb){$/;"	f
+set_segmdesc	.\dsctbl.c	/^void set_segmdesc(struct SEGMENT_DESCRIPTOR *sd, unsigned int limit, int base, int ar){$/;"	f
+size	.\bootpack.h	/^	int start, end, size, free, flags;$/;"	m	struct:Queue
+size	.\bootpack.h	/^	unsigned int addr, size;$/;"	m	struct:FREEINFO
+start	.\bootpack.h	/^	int start, end, size, free, flags;$/;"	m	struct:Queue
+vmode	.\bootpack.h	/^	char cyls, leds, vmode, reserve;$/;"	m	struct:BOOTINFO
+vram	.\bootpack.h	/^	char *vram;$/;"	m	struct:BOOTINFO
+wait_KBC_sendready	.\equipment.c	/^void wait_KBC_sendready(void){$/;"	f
+x	.\bootpack.h	/^	int x, y, btn;$/;"	m	struct:MOUSE_DEC
+y	.\bootpack.h	/^	int x, y, btn;$/;"	m	struct:MOUSE_DEC

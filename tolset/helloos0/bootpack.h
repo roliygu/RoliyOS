@@ -87,9 +87,9 @@ int mouse_decode(struct MOUSE_DEC *mdec, unsigned char dat);
 #define MEMMAN_FREES 			4090
 struct FREEINFO{
 	// 使用块起始地址和块大小来表示某段内存
+	// 1单位4KB
 	unsigned int addr, size;
 };
-
 struct MEMMAN{
 	// frees:可用块数，maxfrees:frees最大值
 	// lostsize:释放失败的内存大小总和 losts:失败次数
@@ -97,6 +97,7 @@ struct MEMMAN{
 	struct FREEINFO free[MEMMAN_FREES];
 };
 
+int insertmemory(struct MEMMAN *man, int index, unsigned int addr, unsigned int size);
 void memman_init(struct MEMMAN *man);
 unsigned int memman_total(struct MEMMAN *man);
 unsigned int memman_alloc(struct MEMMAN *man, unsigned int size);
