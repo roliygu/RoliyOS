@@ -40,12 +40,11 @@ unsigned int memman_alloc(struct MEMMAN *man, unsigned int size){
 			a = man->free[i].addr;
 			man->free[i].addr += size;
 			man->free[i].size -= size;
-			if(man->free[i].size<=1){
+			if(man->free[i].size == 0){
 				man->frees--;
-				if(i < man->frees-1)
-					man->free[i].size += man->free[i+1].size;
-				for(i = i+1;i < man->frees;i++)
-					man->free[i] = man->free[i + 1];
+				for (; i < man->frees; i++) {
+					man->free[i] = man->free[i + 1]; /* \‘¢‘Ì‚Ì‘ã“ü */
+				}
 			}
 		}
 		return a;
@@ -53,6 +52,63 @@ unsigned int memman_alloc(struct MEMMAN *man, unsigned int size){
 	return 0;
 }
 int memman_free(struct MEMMAN *man, unsigned int addr, unsigned int size){
+	int i, j;
+	for (i = 0; i < man->frees; i++) {
+		if (man->free[i].addr > addr) {
+			break;
+		}
+	}
+	if (i > 0) {
+		if (man->free[i - 1].addr + man->free[i - 1].size == addr) {
+			man->free[i - 1].size += size;
+			if (i < man->frees) {
+				if (addr + size == man->free[i].addr) {
+					man->free[i - 1].size += man->free[i].size;
+					man->frees--;
+					for (; i < man->frees; i++) {
+						man->free[i] = man->free[i + 1]; 
+					}
+				}
+			}
+			return 0;
+		}
+	}
+	if (i < man->frees) {
+		if (addr + size == man->free[i].addr) {
+			man->free[i].addr = addr;
+			man->free[i].size += size;
+			return 0; 
+		}
+	}
+	if (man->frees < MEMMAN_FREES) {
+		for (j = man->frees; j > i; j--) {
+			man->free[j] = man->free[j - 1];
+		}
+		man->frees++;
+		if (man->maxfrees < man->frees) {
+			man->maxfrees = man->frees; 
+		}
+		man->free[i].addr = addr;
+		man->free[i].size = size;
+		return 0; 
+	}
+	man->losts++;
+	man->lostsize += size;
+	return -1; 
+}
+unsigned int memman_alloc_4k(struct MEMMAN *man, unsigned int size){
+	unsigned int a;
+	size = (size + 0xfff) & 0xfffff000;
+	a = memman_alloc(man, size);
+	return a;
+}
+unsigned int memman_free_4k(struct MEMMAN *man,unsigned int addr, unsigned int size){
+	int i;
+	size = (size + 0xfff) & 0xfffff000;
+	i = memman_free(man, addr, size);
+	return i;
+}
+/*int memman_free(struct MEMMAN *man, unsigned int addr, unsigned int size){
 	// 释放
 	int i,j;
 	for(i = 0;i < man->frees; i++){
@@ -73,7 +129,7 @@ int memman_free(struct MEMMAN *man, unsigned int addr, unsigned int size){
 			man->free[i].size += size;
 			man->free[i].addr -= size;
 		}else{
-			insertmemory(&man, i, addr, size);
+			return insertmemory(&man, i, addr, size);
 		}
 		return 0;
 	}else if(i == man->frees){
@@ -83,7 +139,7 @@ int memman_free(struct MEMMAN *man, unsigned int addr, unsigned int size){
 		if(ef == st)
 			man->free[i-1].size += size;
 		else{
-			insertmemory(&man, i, addr, size);		
+			return insertmemory(&man, i, addr, size);		
 		}
 	}else{
 		sf = man->free[i-1].addr;
@@ -96,15 +152,14 @@ int memman_free(struct MEMMAN *man, unsigned int addr, unsigned int size){
 					man->free[i] = man->free[i+1];
 				man->frees--;
 			}
-			// 不能和后面合并时，不管
 		}else{
 			if(et == sn){
 				man->free[i].addr -= size;
 				man->free[i].size += size;
 			}else{
-				insertmemory(&man, i, addr, size);
+				return insertmemory(&man, i, addr, size);
 			}
 		}
 	}
 	return 1;
-}
+}*/

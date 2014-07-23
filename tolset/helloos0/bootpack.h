@@ -22,7 +22,46 @@ void asm_inthandler21(void);
 void asm_inthandler27(void);
 void asm_inthandler2c(void);
 
+// memory.c
+#define MEMMAN_FREES 			4090
+#define MEMMAN_ADDR 			0x003c0000
+struct FREEINFO{
+	// 使用块起始地址和块大小来表示某段内存
+	// 1单位4KB
+	unsigned int addr, size;
+};
+struct MEMMAN{
+	// frees:可用块数，maxfrees:frees最大值
+	// lostsize:释放失败的内存大小总和 losts:失败次数
+	int frees, maxfrees, lostsize, losts;
+	struct FREEINFO free[MEMMAN_FREES];
+};
+
+int insertmemory(struct MEMMAN *man, int index, unsigned int addr, unsigned int size);
+void memman_init(struct MEMMAN *man);
+unsigned int memman_total(struct MEMMAN *man);
+unsigned int memman_alloc(struct MEMMAN *man, unsigned int size);
+int memman_free(struct MEMMAN *man, unsigned int addr, unsigned int size);
+
 // graphic.c
+#define MAX_SHEETS 		256
+#define SHEET_USE 		1
+struct SHEET{
+	// bxsize*bysize:图层的大小;(vx0, vy0):图层在画面上位置的坐标
+	// col_inv:透明色号;height:图层高度;Flags:各种设定信息
+	unsigned char *buf;
+	int bxsize, bysize, vx0, vy0, col_inv, height, flags;
+};
+struct SHTCTL{
+	// (vram, xsize, ysize):(VRAM地址,画面大小)
+	// top:最上层图层高度
+	// sheets各个图层的地址
+	// sheets0各个图层
+	unsigned char *vram;
+	int xsize, ysize, top;
+	struct SHEET *sheets[MAX_SHEETS];
+	struct SHEET sheets0[MAX_SHEETS];
+};
 void init_palette(void);
 void set_palette(unsigned char *rgb);
 void boxfill8(unsigned char *vram, int xsize, unsigned char c, int x0, int y0, int x1, int y1);
@@ -32,6 +71,14 @@ void putfonts8_asc(char *vram, int xsize, int x, int y, char c, unsigned char *s
 void init_mouse_cursor8(char *mouse, char bc);
 void putblock8_8(char *vram, int vxsize, int pxsize,
 	int pysize, int px0, int py0, char *buf, int bxsize);
+struct SHTCTL *shtctl_init(struct MEMMAN *memman, unsigned char *vram, int xsize, int ysize);
+struct SHEET *sheet_alloc(struct SHTCTL *ctl);
+void sheet_setbuf(struct SHEET *sht, unsigned char *buf, int xsize, int ysize, int col_inv);
+void sheet_updown(struct SHTCTL *ctl, struct SHEET *sht, int height);
+void sheet_refresh(struct  SHTCTL *ctl, struct SHEET *sht,int bx0,int by0,int bx1,int by1);
+void sheet_refreshsub(struct  SHTCTL *ctl, int vx0, int vy0, int vx1, int vy1);
+void sheet_slide(struct SHTCTL *ctl, struct SHEET *sht, int vx0, int vy0);
+void sheet_free(struct SHTCTL *ctl, struct SHEET *sht);
 #define COL8_000000		0
 #define COL8_FF0000		1
 #define COL8_00FF00		2
@@ -83,26 +130,6 @@ int mouse_decode(struct MOUSE_DEC *mdec, unsigned char dat);
 #define KEYCMD_SENDTO_MOUSE		0xd4
 #define MOUSECMD_ENABLE			0xf4
 
-// memory.c
-#define MEMMAN_FREES 			4090
-struct FREEINFO{
-	// 使用块起始地址和块大小来表示某段内存
-	// 1单位4KB
-	unsigned int addr, size;
-};
-struct MEMMAN{
-	// frees:可用块数，maxfrees:frees最大值
-	// lostsize:释放失败的内存大小总和 losts:失败次数
-	int frees, maxfrees, lostsize, losts;
-	struct FREEINFO free[MEMMAN_FREES];
-};
-
-int insertmemory(struct MEMMAN *man, int index, unsigned int addr, unsigned int size);
-void memman_init(struct MEMMAN *man);
-unsigned int memman_total(struct MEMMAN *man);
-unsigned int memman_alloc(struct MEMMAN *man, unsigned int size);
-int memman_free(struct MEMMAN *man, unsigned int addr, unsigned int size);
-
 // dsctbl.c 
 struct SEGMENT_DESCRIPTOR {
 	short limit_low, base_low;
@@ -130,6 +157,9 @@ void set_gatedesc(struct GATE_DESCRIPTOR *gd, int offset, int selector, int ar);
 //inc.c
 void init_pic(void);
 void inthandler27(int *esp);
+unsigned int memtest(unsigned int start, unsigned int end);
+#define EFLAGS_AC_BIT      0x00040000
+#define CR0_CACHE_DISABLE  0x60000000
 #define PIC0_ICW1		0x0020
 #define PIC0_OCW2		0x0020
 #define PIC0_IMR		0x0021

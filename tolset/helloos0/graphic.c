@@ -22,7 +22,6 @@ void init_palette(void){
 	set_palette(table_rgb);
 	return;
 }
-
 void set_palette(unsigned char *rgb){
 	int i, eflags;
 	eflags = io_load_eflags();	// 记录中断许可标志的值
@@ -144,5 +143,155 @@ void putblock8_8(char *vram, int vxsize, int pxsize,
 			vram[(py0 + y) * vxsize + (px0 + x)] = buf[y * bxsize + x];
 		}
 	}
+	return;
+}
+struct SHTCTL *shtctl_init(struct MEMMAN *memman, unsigned char *vram, int xsize, int ysize){
+	struct SHTCTL *ctl;
+	int i;
+	ctl = (struct SHTCTL *) memman_alloc_4k(memman, sizeof (struct SHTCTL));
+	if (ctl == 0) {
+		goto err;
+	}
+	ctl->vram = vram;
+	ctl->xsize = xsize;
+	ctl->ysize = ysize;
+	ctl->top = -1; // 刚初始化,还没有图层
+	for (i = 0; i < MAX_SHEETS; i++) {
+		ctl->sheets0[i].flags = 0; // 标记未使用
+	}
+err:
+	return ctl;
+}
+struct SHEET *sheet_alloc(struct SHTCTL *ctl){
+	// 将新生成的未使用的图层初始化
+	struct SHEET *sht;
+	int i;
+	for(i=0;i <MAX_SHEETS;i++){
+		if(ctl->sheets0[i].flags == 0){
+			sht = &ctl->sheets0[i];
+			sht->flags = SHEET_USE; // 标记正在使用
+			sht->height = -1; // 不显示
+			return sht;
+		}
+	}
+	return 0;
+}
+void sheet_setbuf(struct SHEET *sht, unsigned char *buf, int xsize, int ysize, int col_inv){
+	sht->buf = buf;
+	sht->bxsize = xsize;
+	sht->bysize = ysize;
+	sht->col_inv = col_inv;
+	return;
+}
+void sheet_updown(struct SHTCTL *ctl, struct SHEET *sht,int height){
+	// 设置某图层的高度，然后依次更改其他图层高度
+	int h, old = sht->height;
+	
+	// 如果指定的高度过高或过低，进行修正
+	height = (height > ctl->top+1)?(ctl->top + 1):height;
+	height = (height < -1)?-1:height;
+
+	sht->height = height;// 设定高度
+
+	if(old > height){
+		// 修改的高度比以前低
+		if(height >= 0){
+			// 修改指针数组,将[height,old)的元素往上挪一位，更新其高度
+			for(h = old; h>height; h--){
+				ctl->sheets[h] = ctl->sheets[h-1];
+				ctl->sheets[h]->height = h;
+			}
+			// 把sht的地址贴到height位置上
+			ctl->sheets[height] = sht;
+		}else{
+			// height<0表示将该层设为隐藏
+			if(ctl->top > old){
+				// 如果old上面还有图层的话，则将上面的图层都向下挪一位
+				for(h = old; h<ctl->top; h++){
+					ctl->sheets[h] = ctl->sheets[h+1];
+					ctl->sheets[h]->height = h;
+				}
+			}
+			ctl->top--;
+		}
+		sheet_refreshsub(ctl, sht->vx0, sht->vy0, sht->vx0 + sht->bxsize, sht->vy0 + sht->bysize);
+	}else if(old < height){
+		// 修改的高度比以前高
+		if(old >= 0){
+			// 将[old,height)往下挪一位
+			for(h=old; h<height;h++){
+				ctl->sheets[h] = ctl->sheets[h+1];
+				ctl->sheets[h]->height=h;
+			}
+			ctl->sheets[height] = sht;
+		}else{
+			// 说明原来图层是不显示的
+			// 需要把height上面的上移一位，才能插入sht
+			for(h=ctl->top; h>=height;h--){
+				ctl->sheets[h+1] = ctl->sheets[h];
+				ctl->sheets[h+1]->height = h+1;
+			}
+			ctl->sheets[height] = sht;
+			ctl->top++;
+		}
+		sheet_refreshsub(ctl, sht->vx0, sht->vy0, sht->vx0 + sht->bxsize, sht->vy0 + sht->bysize);
+	}
+	return;
+}
+void sheet_refresh(struct  SHTCTL *ctl, struct SHEET *sht,int bx0,int by0,int bx1,int by1){
+	if(sht->height >= 0){
+		sheet_refreshsub(ctl, sht->vx0+bx0, sht->vy0+by0, sht->vx0+bx1, sht->vy0+by1);
+	}
+	return;
+}
+void sheet_refreshsub(struct  SHTCTL *ctl, int vx0, int vy0, int vx1, int vy1){
+	// 指定刷新{vx0,vy0,vx1,vy1}的块
+	int h, bx, by, vx, vy, bx0, by0, bx1, by1;
+	unsigned char *buf, c, *vram = ctl->vram;
+	struct SHEET *sht;
+	for (h = 0; h <= ctl->top; h++) {
+		sht = ctl->sheets[h];
+		buf = sht->buf;
+		// 下面的变换值得关注
+		bx0 = vx0 - sht->vx0;
+		by0 = vy0 - sht->vy0;
+		bx1 = vx1 - sht->vx0;
+		by1 = vy1 - sht->vy0;
+
+		bx0 = (bx0<0)?0:bx0;
+		by0 = (by0<0)?0:by0;
+		bx1 = (bx1>sht->bxsize)?(sht->bxsize):bx1;
+		by1 = (by1>sht->bysize)?(sht->bysize):by1;
+
+		for (by = by0; by < by1; by++) {
+			vy = sht->vy0 + by;
+			for (bx = bx0; bx < bx1; bx++) {
+				vx = sht->vx0 + bx;
+				c = buf[by * sht->bxsize + bx];
+				if (c != sht->col_inv) {
+					// 和‘透明色’相同就不刷新
+					vram[vy * ctl->xsize + vx] = c;
+				}
+			}
+		}
+	}
+	return;
+}
+void sheet_slide(struct SHTCTL *ctl, struct SHEET *sht, int vx0, int vy0){
+	int old_vx0 = sht->vx0, old_vy0 = sht->vy0;
+	sht->vx0 = vx0;
+	sht->vy0 = vy0;
+	if(sht->height>=0){
+		// 只刷新移动前的图层块和移动后的图层块
+		sheet_refreshsub(ctl,old_vx0, old_vy0, old_vx0+sht->bxsize, old_vy0+sht->bysize);
+		sheet_refreshsub(ctl, vx0, vy0, vx0+sht->bxsize, vy0+sht->bysize);
+	}
+	return;
+}
+void sheet_free(struct SHTCTL *ctl, struct SHEET *sht){
+	if(sht->height>=0){
+		sheet_updown(ctl,sht,-1);
+	}
+	sht->flags=0;
 	return;
 }
