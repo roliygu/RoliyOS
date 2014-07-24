@@ -1,4 +1,4 @@
-OBJS_BOOTPACK = bootpack.obj naskfunc.obj hankaku.obj memory.obj graphic.obj dsctbl.obj int.obj datastructure.obj equipment.obj
+OBJS_BOOTPACK = bootpack.obj naskfunc.obj hankaku.obj memory.obj graphic.obj dsctbl.obj int.obj datastructure.obj equipment.obj timer.obj
 
 TOOLPATH = ../z_tools/
 INCPATH = ../z_tools/haribote/

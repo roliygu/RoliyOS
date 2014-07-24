@@ -2,6 +2,7 @@
 #include "bootpack.h"
 
 extern struct Queue keyfifo, mousefifo;
+extern struct TIMERCTL timerctl;
 
 void HariMain(void){
 	
@@ -20,7 +21,8 @@ void HariMain(void){
 	io_sti();  // IDT/PIC初始化完成，开放CPU中断
 	que_init(&keyfifo, 32, keybuf);
 	que_init(&mousefifo, 128, mousebuf);
-	io_out8(PIC0_IMR, 0xf9); //开放PIC1和键盘中断
+	init_pit();
+	io_out8(PIC0_IMR, 0xf8); //开放PIT,PIC1和键盘中断
 	io_out8(PIC1_IMR, 0xef); //开放鼠标中断
 
 	init_keyboard();
@@ -66,7 +68,7 @@ void HariMain(void){
 
 	for(;;){
 		count++;
-		sprintf(s, "%010d", count);
+		sprintf(s, "%010d", timerctl.count);
 		boxfill8(buf_win, 160, COL8_C6C6C6, 40, 28, 119, 43);
 		putfonts8_asc(buf_win, 160, 40, 28, COL8_000000, s);
 		sheet_refresh(sht_win, 40, 28, 120, 44);

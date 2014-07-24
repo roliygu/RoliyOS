@@ -179,4 +179,14 @@ unsigned int memtest(unsigned int start, unsigned int end);
 #define PIC1_ICW4		0x00a1
 #define PORT_KEYDAT     0x0060  // (固定的)键盘/鼠标设备的内存/端口
 
+// timer.c
+#define PIT_CTRL 		0x0043
+#define PIT_CNT0 		0x0040
+void init_pit(void);
+void asm_inthandler20(void);
+void inthandler20(int *esp);
+struct TIMERCTL{
+	unsigned int count;
+};
+
 #endif

@@ -183,6 +183,29 @@ RoliyOS-My small OS
 * 软盘的第一个扇区称作启动区，计算机会检查该扇区最后两个字节是否是`55AA`来判断该软盘是否是启动盘
 
 ###键盘控制电路，键盘和鼠标
+* 写入一个中断的流程
+	1. 用C语言写中断之后要执行的动作[当然,是C语言支持的功能,修改makefile编译此C文件];
+		* void inthandler20(int *esp){return ;}
+	2. 使用汇编写保存中断现场和恢复的部分[注意声明],中间调用C语言所写的中断程序;
+		* _asm_inthandler20:
+		* PUSH	ES
+		* PUSH	DS
+		* PUSHAD
+		* MOV		EAX,ESP
+		* PUSH	EAX
+		* MOV		AX,SS
+		* MOV		DS,AX
+		* MOV		ES,AX
+		* CALL	_inthandler20
+		* POP		EAX
+		* POPAD
+		* POP		DS
+		* POP		ES
+		* IRETD
+	3. 注册中断向量
+		* set_gatedesc(idt + 0x20, (int) asm_inthandler20, 2 * 8, AR_INTGATE32);
+	4. 主函数中开放对应中断
+		* io_out8(PIC0_IMR, 0xf8);
 
 ###内存管理
 * 采用FreeInfo:{块首地址,块大小}来表示一个空闲内存块
@@ -218,7 +241,13 @@ RoliyOS-My small OS
 	* 刷新时,通过指定开始刷新的高度,可以避免每次刷新都会'很快'地刷一遍背景,造成闪烁的感觉
 		* 例如有时图层移动时,下面图层露出,就要考虑从哪个height还是刷比较合适
 
-
+###计时器8254
+* 设置中断周期
+	* AL=0x34;OUT(0x43,AL)
+	* AL=中断周期低8位;OUT(0x40,AL);
+	* AL=中断周期高8位;OUT(0x40,AL);
+	* 中断周期设为0,默认为65536
+* 产生中断的频率为`主频/设定的数值`;[设定数值为11932,近似10ms一次中断]
 
 ###内存分布
 	0x00000000 - 0x000fffff :BIOS显存之类(1M)
