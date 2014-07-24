@@ -9,11 +9,11 @@ void HariMain(void){
 	char s[40], mcursor[256], keybuf[32], mousebuf[128];
 	int mx, my,i;
 	struct MOUSE_DEC mdec;
-	unsigned int memtotal;
+	unsigned int memtotal, count = 0;
 	struct MEMMAN *memman = (struct MEMMAN *) MEMMAN_ADDR;
 	struct SHTCTL *shtctl;
-	struct SHEET *sht_back, *sht_mouse;
-	unsigned char *buf_back, buf_mouse[256];
+	struct SHEET *sht_back, *sht_mouse, *sht_win;
+	unsigned char *buf_back, buf_mouse[256], *buf_win;
 
 	init_gdtidt();
 	init_pic();
@@ -31,31 +31,49 @@ void HariMain(void){
 	memman_free(memman, 0x00400000, memtotal - 0x00400000);
 	
 	init_palette();
+	mx = (binfo->scrnx - 16) / 2; //让鼠标坐标在正中间
+	my = (binfo->scrny - 28 - 16) / 2;
+
 	shtctl = shtctl_init(memman, binfo->vram, binfo->scrnx, binfo->scrny);
+
 	sht_back  = sheet_alloc(shtctl);
 	sht_mouse = sheet_alloc(shtctl);
+	sht_win   = sheet_alloc(shtctl);
+
 	buf_back  = (unsigned char *) memman_alloc_4k(memman, binfo->scrnx * binfo->scrny);
+	buf_win   = (unsigned char *) memman_alloc_4k(memman, 160 * 52);
+
 	sheet_setbuf(sht_back, buf_back, binfo->scrnx, binfo->scrny, -1); /* “§–¾F‚È‚µ */
 	sheet_setbuf(sht_mouse, buf_mouse, 16, 16, 99);
+	sheet_setbuf(sht_win, buf_win, 160, 52, -1); /* “§–¾F‚È‚µ */
+
 	init_screen8(buf_back, binfo->scrnx, binfo->scrny);
 	init_mouse_cursor8(buf_mouse, 99);
-	sheet_slide(sht_back, 0, 0);
-	mx = (binfo->scrnx - 16) / 2; 
-	my = (binfo->scrny - 28 - 16) / 2;
+	init_window8(buf_win, 160, 52, "counter");
+
+	sheet_slide(sht_back, 0, 0);	
 	sheet_slide(sht_mouse, mx, my);
+	sheet_slide(sht_win, 80, 72);
+
 	sheet_updown(sht_back,  0);
-	sheet_updown(sht_mouse, 1);
-	sprintf(s, "(%3d, %3d)", mx, my);
-	putfonts8_asc(buf_back, binfo->scrnx, 0, 0, COL8_FFFFFF, s);
+	sheet_updown(sht_win,   1);
+	sheet_updown(sht_mouse, 2);
+
 	sprintf(s, "memory %dMB   free : %dKB",
 			memtotal / (1024 * 1024), memman_total(memman) / 1024);
 	putfonts8_asc(buf_back, binfo->scrnx, 0, 32, COL8_FFFFFF, s);
 	sheet_refresh(sht_back, 0, 0, binfo->scrnx, 48);
 
 	for(;;){
+		count++;
+		sprintf(s, "%010d", count);
+		boxfill8(buf_win, 160, COL8_C6C6C6, 40, 28, 119, 43);
+		putfonts8_asc(buf_win, 160, 40, 28, COL8_000000, s);
+		sheet_refresh(sht_win, 40, 28, 120, 44);
+
 		io_cli();   //屏蔽中断
 		if(que_status(&keyfifo) + que_status(&mousefifo)==0){
-			io_stihlt();
+			io_sti();
 		}else{
 			if (que_status(&keyfifo) != 0) {
 				i = que_pop(&keyfifo);

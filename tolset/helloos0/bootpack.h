@@ -56,10 +56,11 @@ struct SHEET{
 };
 struct SHTCTL{
 	// (vram, xsize, ysize):(VRAM地址,画面大小)
+	// map:各个像素点所属的图层
 	// top:最上层图层高度
 	// sheets各个图层的地址
 	// sheets0各个图层
-	unsigned char *vram;
+	unsigned char *vram,*map;
 	int xsize, ysize, top;
 	struct SHEET *sheets[MAX_SHEETS];
 	struct SHEET sheets0[MAX_SHEETS];
@@ -68,9 +69,10 @@ void init_palette(void);
 void set_palette(unsigned char *rgb);
 void boxfill8(unsigned char *vram, int xsize, unsigned char c, int x0, int y0, int x1, int y1);
 void init_screen8(char *vram, int x, int y);
+void init_mouse_cursor8(char *mouse, char bc);
+void init_window8(unsigned char *buf, int xsize, int ysize, char *title);
 void putfont8(char *vram, int xsize, int x, int y, char c, char *font);
 void putfonts8_asc(char *vram, int xsize, int x, int y, char c, unsigned char *s);
-void init_mouse_cursor8(char *mouse, char bc);
 void putblock8_8(char *vram, int vxsize, int pxsize,
 	int pysize, int px0, int py0, char *buf, int bxsize);
 struct SHTCTL *shtctl_init(struct MEMMAN *memman, unsigned char *vram, int xsize, int ysize);
@@ -78,9 +80,10 @@ struct SHEET *sheet_alloc(struct SHTCTL *ctl);
 void sheet_setbuf(struct SHEET *sht, unsigned char *buf, int xsize, int ysize, int col_inv);
 void sheet_updown(struct SHEET *sht, int height);
 void sheet_refresh(struct SHEET *sht,int bx0,int by0,int bx1,int by1);
-void sheet_refreshsub(struct  SHTCTL *ctl, int vx0, int vy0, int vx1, int vy1);
+void sheet_refreshsub(struct SHTCTL *ctl, int vx0, int vy0, int vx1, int vy1, int h0, int h1);
 void sheet_slide(struct SHEET *sht, int vx0, int vy0);
 void sheet_free(struct SHEET *sht);
+
 #define COL8_000000		0
 #define COL8_FF0000		1
 #define COL8_00FF00		2
