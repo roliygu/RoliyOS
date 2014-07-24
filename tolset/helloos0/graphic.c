@@ -158,6 +158,7 @@ struct SHTCTL *shtctl_init(struct MEMMAN *memman, unsigned char *vram, int xsize
 	ctl->top = -1; // 刚初始化,还没有图层
 	for (i = 0; i < MAX_SHEETS; i++) {
 		ctl->sheets0[i].flags = 0; // 标记未使用
+		ctl->sheets0[i].ctl = ctl; // 每个图层记录所属的数组
 	}
 err:
 	return ctl;
@@ -183,10 +184,10 @@ void sheet_setbuf(struct SHEET *sht, unsigned char *buf, int xsize, int ysize, i
 	sht->col_inv = col_inv;
 	return;
 }
-void sheet_updown(struct SHTCTL *ctl, struct SHEET *sht,int height){
+void sheet_updown(struct SHEET *sht,int height){
 	// 设置某图层的高度，然后依次更改其他图层高度
 	int h, old = sht->height;
-	
+	struct SHTCTL *ctl = sht->ctl;
 	// 如果指定的高度过高或过低，进行修正
 	height = (height > ctl->top+1)?(ctl->top + 1):height;
 	height = (height < -1)?-1:height;
@@ -238,7 +239,8 @@ void sheet_updown(struct SHTCTL *ctl, struct SHEET *sht,int height){
 	}
 	return;
 }
-void sheet_refresh(struct  SHTCTL *ctl, struct SHEET *sht,int bx0,int by0,int bx1,int by1){
+void sheet_refresh(struct SHEET *sht,int bx0,int by0,int bx1,int by1){
+	struct SHTCTL *ctl = sht->ctl;
 	if(sht->height >= 0){
 		sheet_refreshsub(ctl, sht->vx0+bx0, sht->vy0+by0, sht->vx0+bx1, sht->vy0+by1);
 	}
@@ -249,6 +251,12 @@ void sheet_refreshsub(struct  SHTCTL *ctl, int vx0, int vy0, int vx1, int vy1){
 	int h, bx, by, vx, vy, bx0, by0, bx1, by1;
 	unsigned char *buf, c, *vram = ctl->vram;
 	struct SHEET *sht;
+
+	vx0 = (vx0<0)?0:vx0;
+	vy0 = (vy0<0)?0:vy0;
+	vx1 = (vx1>ctl->xsize)?(ctl->xsize):vx1;
+	vy1 = (vy1>ctl->ysize)?(ctl->ysize):vy1;
+
 	for (h = 0; h <= ctl->top; h++) {
 		sht = ctl->sheets[h];
 		buf = sht->buf;
@@ -277,20 +285,22 @@ void sheet_refreshsub(struct  SHTCTL *ctl, int vx0, int vy0, int vx1, int vy1){
 	}
 	return;
 }
-void sheet_slide(struct SHTCTL *ctl, struct SHEET *sht, int vx0, int vy0){
+void sheet_slide(struct SHEET *sht, int vx0, int vy0){
+	struct SHTCTL *ctl = sht->ctl;
 	int old_vx0 = sht->vx0, old_vy0 = sht->vy0;
 	sht->vx0 = vx0;
 	sht->vy0 = vy0;
 	if(sht->height>=0){
 		// 只刷新移动前的图层块和移动后的图层块
-		sheet_refreshsub(ctl,old_vx0, old_vy0, old_vx0+sht->bxsize, old_vy0+sht->bysize);
+		sheet_refreshsub(ctl, old_vx0, old_vy0, old_vx0+sht->bxsize, old_vy0+sht->bysize);
 		sheet_refreshsub(ctl, vx0, vy0, vx0+sht->bxsize, vy0+sht->bysize);
 	}
 	return;
 }
-void sheet_free(struct SHTCTL *ctl, struct SHEET *sht){
+void sheet_free(struct SHEET *sht){
+	struct SHTCTL *ctl = sht->ctl;
 	if(sht->height>=0){
-		sheet_updown(ctl,sht,-1);
+		sheet_updown(sht,-1);
 	}
 	sht->flags=0;
 	return;

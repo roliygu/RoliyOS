@@ -49,8 +49,10 @@ int memman_free(struct MEMMAN *man, unsigned int addr, unsigned int size);
 struct SHEET{
 	// bxsize*bysize:图层的大小;(vx0, vy0):图层在画面上位置的坐标
 	// col_inv:透明色号;height:图层高度;Flags:各种设定信息
+	// *ctl用来指向所属的数组
 	unsigned char *buf;
 	int bxsize, bysize, vx0, vy0, col_inv, height, flags;
+	struct SHTCTL *ctl;
 };
 struct SHTCTL{
 	// (vram, xsize, ysize):(VRAM地址,画面大小)
@@ -74,11 +76,11 @@ void putblock8_8(char *vram, int vxsize, int pxsize,
 struct SHTCTL *shtctl_init(struct MEMMAN *memman, unsigned char *vram, int xsize, int ysize);
 struct SHEET *sheet_alloc(struct SHTCTL *ctl);
 void sheet_setbuf(struct SHEET *sht, unsigned char *buf, int xsize, int ysize, int col_inv);
-void sheet_updown(struct SHTCTL *ctl, struct SHEET *sht, int height);
-void sheet_refresh(struct  SHTCTL *ctl, struct SHEET *sht,int bx0,int by0,int bx1,int by1);
+void sheet_updown(struct SHEET *sht, int height);
+void sheet_refresh(struct SHEET *sht,int bx0,int by0,int bx1,int by1);
 void sheet_refreshsub(struct  SHTCTL *ctl, int vx0, int vy0, int vx1, int vy1);
-void sheet_slide(struct SHTCTL *ctl, struct SHEET *sht, int vx0, int vy0);
-void sheet_free(struct SHTCTL *ctl, struct SHEET *sht);
+void sheet_slide(struct SHEET *sht, int vx0, int vy0);
+void sheet_free(struct SHEET *sht);
 #define COL8_000000		0
 #define COL8_FF0000		1
 #define COL8_00FF00		2
