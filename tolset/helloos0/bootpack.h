@@ -68,6 +68,7 @@ struct SHTCTL{
 void init_palette(void);
 void set_palette(unsigned char *rgb);
 void boxfill8(unsigned char *vram, int xsize, unsigned char c, int x0, int y0, int x1, int y1);
+void putfonts8_asc_sht(struct SHEET *sht, int x, int y, int c, int b, char *s, int l);
 void init_screen8(char *vram, int x, int y);
 void init_mouse_cursor8(char *mouse, char bc);
 void init_window8(unsigned char *buf, int xsize, int ysize, char *title);
@@ -102,7 +103,7 @@ void sheet_free(struct SHEET *sht);
 #define COL8_848484		15
 
 // datastructure.c
-typedef unsigned char Type;
+typedef int Type;
 struct Queue {
 	Type *buf;
 	int start, end, size, free, flags;
@@ -124,8 +125,8 @@ struct MOUSE_DEC{
 void inthandler21(int *esp);
 void inthandler2c(int *esp);
 void wait_KBC_sendready(void);
-void init_keyboard(void);
-void enable_mouse(void);
+void init_keyboard(struct Queue *fifo, int data0);
+void enable_mouse(struct Queue *fifo, int data0, struct MOUSE_DEC *mdec);
 int mouse_decode(struct MOUSE_DEC *mdec, unsigned char dat);
 #define PORT_KEYSTA				0x0064    //设备编码
 #define PORT_KEYCMD				0x0064
@@ -186,13 +187,23 @@ unsigned int memtest(unsigned int start, unsigned int end);
 #define TIMER_FLAGS_ALLOC 		1
 #define TIMER_FLAGS_USING 		2
 struct TIMER{
+	// next:  下一个timer的指针；timeout:时间进行到这个值的时候报告给CPU
+	// flags: 这个timer是否有效
+	// fifo:  指向缓冲区
+	// data:  用来标记不同timer
+	struct TIMER *next;
 	unsigned int timeout, flags;
 	struct Queue *fifo;
-	unsigned char data;
+	char data;
 };
 struct TIMERCTL{
+	// count:  从开始到现在8254发过来的计数次数
+	// next:   指向大于当前时刻的第一个timer的timeout
+	// t0:	   指向大于当前时刻的第一个timer
+	// timers0:timer数组，相当于提前分配好内存了
 	unsigned int count,next;
-	struct TIMER timer[MAX_TIMER];
+	struct TIMER *t0;
+	struct TIMER timers0[MAX_TIMER];
 };
 void init_pit(void);
 void asm_inthandler20(void);

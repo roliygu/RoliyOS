@@ -3,7 +3,8 @@
 // 个人理解:鼠标和键盘受"键盘控制电路KBC"(某类似于一个芯片的东西)控制，
 // 鼠标和键盘被按下或松开后就触发中断,然后将按键数据暂存于KBC,然后CPU从端口
 // 0x0060(KBC接口)把数据取出来
-struct Queue keyfifo, mousefifo;
+struct Queue *keyfifo, *mousefifo;
+int keydata0, mousedata0;
 
 void inthandler21(int *esp){
 	//来自PS/键盘的中断,每按一个键显示两个编码
@@ -11,16 +12,16 @@ void inthandler21(int *esp){
 	unsigned char data;
 	io_out8(PIC0_OCW2, 0x61);	// 将"0x61"发送给OCW2,表示已经接到IRQ1中断，可以继续接收其他中断
 	data = io_in8(PORT_KEYDAT);
-	que_push(&keyfifo, data);
+	que_push(keyfifo, data+keydata0);
 	return;
 }
 void inthandler2c(int *esp){
 	//来自PS/鼠标的中断
-	unsigned char data;
+	int data;
 	io_out8(PIC1_OCW2, 0x64);
 	io_out8(PIC0_OCW2, 0x62);
 	data = io_in8(PORT_KEYDAT);
-	que_push(&mousefifo, data);
+	que_push(mousefifo, data+mousedata0);
 	return;
 }
 void wait_KBC_sendready(void){
@@ -32,7 +33,9 @@ void wait_KBC_sendready(void){
 	}
 	return;
 }
-void init_keyboard(void){
+void init_keyboard(struct Queue *fifo, int data0){
+	keyfifo = fifo;
+	keydata0 = data0;
 	//初始化键盘控制电路
 	wait_KBC_sendready();
 	io_out8(PORT_KEYCMD, KEYCMD_WRITE_MODE); // 发出指令表示接下来要设定模式
@@ -40,13 +43,16 @@ void init_keyboard(void){
 	io_out8(PORT_KEYDAT, KBC_MODE); // 设定鼠标模式
 	return;
 }
-void enable_mouse(void){
+void enable_mouse(struct Queue *fifo, int data0, struct MOUSE_DEC *mdec){
+	mousefifo = fifo;
+	mousedata0 = data0;
 	//激活鼠标
 	wait_KBC_sendready();
 	io_out8(PORT_KEYCMD, KEYCMD_SENDTO_MOUSE);  //表示下一个数据是发给鼠标的
 	wait_KBC_sendready();
 	io_out8(PORT_KEYDAT, MOUSECMD_ENABLE);  //发给键盘控制器了，结合上一句话，此消息会被转给鼠标
 	// 这是键盘控制会返回ACK信息也就是0xfa,不过这里没有管
+	mdec->phase = 0;
 	return; 
 }
 int mouse_decode(struct MOUSE_DEC *mdec, unsigned char dat){
