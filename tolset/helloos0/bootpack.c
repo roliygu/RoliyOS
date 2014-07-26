@@ -1,8 +1,15 @@
 #include <stdio.h>
 #include "bootpack.h"
 
-extern struct Queue fifo, fifo;
 extern struct TIMERCTL timerctl;
+static char keytable[0x54] = {
+		0,   0,   '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '^', 0,   0,
+		'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', '@', '[', 0,   0,   'A', 'S',
+		'D', 'F', 'G', 'H', 'J', 'K', 'L', ';', ':', 0,   0,   ']', 'Z', 'X', 'C', 'V',
+		'B', 'N', 'M', ',', '.', '/', 0,   '*', 0,   ' ', 0,   0,   0,   0,   0,   0,
+		0,   0,   0,   0,   0,   0,   0,   '7', '8', '9', '-', '4', '5', '6', '+', '1',
+		'2', '3', '0', '.'
+	};
 
 void HariMain(void){
 	// BIOS
@@ -22,9 +29,10 @@ void HariMain(void){
 	struct SHEET *sht_back, *sht_mouse, *sht_win;
 	unsigned char *buf_back, *buf_win;
 	// Others
-	int i,count=0;
+	int i,count=0,cursor_x,cursor_c;
 	struct Queue fifo;
 	int fifobuf[128];
+
 
 	// 初始化
 	init_gdtidt();
@@ -68,7 +76,7 @@ void HariMain(void){
 	sheet_setbuf(sht_win, buf_win, 160, 52, -1); 
 	init_screen8(buf_back, binfo->scrnx, binfo->scrny);
 	init_mouse_cursor8(buf_mouse, 99);
-	init_window8(buf_win, 160, 52, "counter");
+	init_window8(buf_win, 160, 52, "Window");
 	sheet_slide(sht_back, 0, 0);	
 	sheet_slide(sht_mouse, mx, my);
 	sheet_slide(sht_win, 80, 72);
@@ -80,18 +88,36 @@ void HariMain(void){
 	sprintf(s, "memory %dMB   free : %dKB",
 			memtotal / (1024 * 1024), memman_total(memman) / 1024);
 	putfonts8_asc_sht(sht_back, 0, 32, COL8_FFFFFF, COL8_008484, s, 40);
+	make_textbox8(sht_win, 8, 28, 144, 16, COL8_FFFFFF);
+	cursor_x = 8;
+	cursor_c = COL8_FFFFFF;
+
 	for(;;){
 		count++;
 
 		io_cli();   //屏蔽中断
 		if(que_status(&fifo) == 0)
-			io_sti();
+			io_stihlt();
 		else{
 			i = que_pop(&fifo);
 			io_sti();
 			if(256 <= i && i <= 511){
 				sprintf(s, "%02X", i - 256);
 				putfonts8_asc_sht(sht_back, 0, 16, COL8_FFFFFF, COL8_008484, s, 2);
+				if(i < 0x54 + 256){
+					if(keytable[i-256]!=0 && cursor_x<144){
+						s[0]=keytable[i-256];
+						s[1]=0;
+						putfonts8_asc_sht(sht_win, cursor_x, 28, COL8_000000, COL8_C6C6C6, s, 1);
+						cursor_x +=8;
+					}
+				}
+				if(i ==256+0x0e && cursor_x > 8){
+					putfonts8_asc_sht(sht_win, cursor_x, 28, COL8_000000, COL8_FFFFFF, " ", 1);
+					cursor_x -= 8;
+				}	
+				boxfill8(sht_win->buf, sht_win->bxsize, cursor_c, cursor_x, 28, cursor_x+7, 43);
+				sheet_refresh(sht_win, cursor_x, 28, cursor_x+8, 44);			
 			}else if(512 <= i && i <= 767){
 				if(mouse_decode(&mdec, i-512) != 0){
 					// 三个字节凑齐就显示出来
@@ -113,11 +139,14 @@ void HariMain(void){
 					sprintf(s, "(%3d, %3d)", mx, my);
 					putfonts8_asc_sht(sht_back, 0, 0, COL8_FFFFFF, COL8_008484, s, 10);
 					sheet_slide(sht_mouse, mx, my);
+					if((mdec.btn & 0x01) != 0){
+						sheet_slide(sht_win, mx-80, my-8);
+					}
 				}
 			}else if (i == 10) { // data=10的timer
-				putfonts8_asc_sht(sht_back, 0, 64, COL8_FFFFFF, COL8_008484, "10[sec]", 7);
-				sprintf(s, "%010d", count);
-				putfonts8_asc_sht(sht_win, 40, 28, COL8_000000, COL8_C6C6C6, s, 10);
+				//putfonts8_asc_sht(sht_back, 0, 64, COL8_FFFFFF, COL8_008484, "10[sec]", 7);
+				//sprintf(s, "%010d", count);
+				//putfonts8_asc_sht(sht_win, 40, 28, COL8_000000, COL8_C6C6C6, s, 10);
 			} else if (i == 3) { // data=3的timer
 				putfonts8_asc_sht(sht_back, 0, 80, COL8_FFFFFF, COL8_008484, "3[sec]", 6);
 				count = 0; // ‘ª’èŠJŽn 

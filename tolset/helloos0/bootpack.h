@@ -68,6 +68,7 @@ struct SHTCTL{
 void init_palette(void);
 void set_palette(unsigned char *rgb);
 void boxfill8(unsigned char *vram, int xsize, unsigned char c, int x0, int y0, int x1, int y1);
+void make_textbox8(struct SHEET *sht, int x0, int y0, int sx, int sy, int c);
 void putfonts8_asc_sht(struct SHEET *sht, int x, int y, int c, int b, char *s, int l);
 void init_screen8(char *vram, int x, int y);
 void init_mouse_cursor8(char *mouse, char bc);

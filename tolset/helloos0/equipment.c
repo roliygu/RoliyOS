@@ -6,6 +6,7 @@
 struct Queue *keyfifo, *mousefifo;
 int keydata0, mousedata0;
 
+
 void inthandler21(int *esp){
 	//来自PS/键盘的中断,每按一个键显示两个编码
 	//一个表示键被按下，一个表示松开
