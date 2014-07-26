@@ -1,6 +1,6 @@
 #include "bootpack.h"
 
-int insertmemory(struct MEMMAN *man, int index, unsigned int addr, unsigned int size){
+/*int insertmemory(struct MEMMAN *man, int index, unsigned int addr, unsigned int size){
 	// 往man->free[index]插入{addr,size}
 	if(man->frees < MEMMAN_FREES-4){
 		// 插入一个元素后,不超过上界
@@ -16,7 +16,7 @@ int insertmemory(struct MEMMAN *man, int index, unsigned int addr, unsigned int 
 		man->lostsize+=size;
 		return 0;
 	}
-}
+}*/
 void memman_init(struct MEMMAN *man){
 	man->frees = 0;
 	man->maxfrees = 0;
@@ -24,6 +24,7 @@ void memman_init(struct MEMMAN *man){
 	man->losts = 0;
 	return ;
 }
+
 unsigned int memman_total(struct MEMMAN *man){
 	// 剩余可用内存大小
 	unsigned int i,t = 0;
@@ -32,10 +33,11 @@ unsigned int memman_total(struct MEMMAN *man){
 	}
 	return t;
 }
+
 unsigned int memman_alloc(struct MEMMAN *man, unsigned int size){
 	// 分配
 	unsigned int i, a;
-	for(i=0;i<man->frees;i++){
+	for(i=0 ; i<man->frees; i++){
 		if(man->free[i].size >= size){
 			a = man->free[i].addr;
 			man->free[i].addr += size;
@@ -43,11 +45,11 @@ unsigned int memman_alloc(struct MEMMAN *man, unsigned int size){
 			if(man->free[i].size == 0){
 				man->frees--;
 				for (; i < man->frees; i++) {
-					man->free[i] = man->free[i + 1]; /* \‘¢‘Ì‚Ì‘ã“ü */
+					man->free[i] = man->free[i + 1]; // \‘¢‘Ì‚Ì‘ã“ü 
 				}
 			}
+			return a;
 		}
-		return a;
 	}
 	return 0;
 }

@@ -1,4 +1,5 @@
 #include "bootpack.h"
+#include <stdio.h>
 
 void init_pic(void){
 	io_out8(PIC0_IMR,  0xff  ); // 禁止所有中断

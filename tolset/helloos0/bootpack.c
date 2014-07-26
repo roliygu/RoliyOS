@@ -34,6 +34,7 @@ void HariMain(void){
 	io_out8(PIC0_IMR, 0xf8); //开放PIT,PIC1和键盘中断
 	io_out8(PIC1_IMR, 0xef); //开放鼠标中断
 	que_init(&fifo, 128, fifobuf);
+	init_palette();
 
 	//计时器
 	timer = timer_alloc();
@@ -75,7 +76,7 @@ void HariMain(void){
 	sheet_updown(sht_win,   1);
 	sheet_updown(sht_mouse, 2);
 	// 显示
-	init_palette();
+	
 	sprintf(s, "memory %dMB   free : %dKB",
 			memtotal / (1024 * 1024), memman_total(memman) / 1024);
 	putfonts8_asc_sht(sht_back, 0, 32, COL8_FFFFFF, COL8_008484, s, 40);
