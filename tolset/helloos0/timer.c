@@ -1,7 +1,6 @@
 #include "bootpack.h"
 
 struct TIMERCTL timerctl;
-extern struct TIMER *task_timer;
 
 void init_pit(){
 	int i;
@@ -35,7 +34,7 @@ void timer_free(struct TIMER *timer){
 	timer->flags = 0;
 	return;
 }
-void timer_init(struct TIMER *timer, struct Queue *fifo, unsigned char data){
+void timer_init(struct TIMER *timer, struct Queue *fifo, int data){
 	timer->fifo = fifo;
 	timer->data = data;
 	return;

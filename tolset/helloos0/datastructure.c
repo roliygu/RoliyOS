@@ -2,13 +2,14 @@
 
 #define FLAGS_OVERRUN		0x0001
 
-void que_init(struct Queue *Q, int size, Type *buf){
+void que_init(struct Queue *Q, int size, Type *buf, struct TASK *task){
 	Q->size = size;
 	Q->buf = buf;
 	Q->free = size; 
 	Q->flags = 0;
 	Q->end = 0; 
 	Q->start = 0; 
+	Q->task = task;
 	return;
 }
 
@@ -20,6 +21,8 @@ int que_push(struct Queue *Q, Type data){
 	Q->buf[Q->end] = data;
 	Q->end = (Q->end+1) % Q->size;
 	Q->free--;
+	if(Q->task!=0 && Q->task->flags != 2)
+		task_run(Q->task);
 	return 0;
 }
 

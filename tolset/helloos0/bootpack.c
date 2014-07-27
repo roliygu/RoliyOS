@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include "bootpack.h"
 
-extern struct TIMERCTL timerctl;
 static char keytable[0x54] = {
 		0,   0,   '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '^', 0,   0,
 		'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', '@', '[', 0,   0,   'A', 'S',
@@ -11,7 +10,6 @@ static char keytable[0x54] = {
 		'2', '3', '0', '.'
 	};
 
-struct TSS32 tss_a, tss_b;
 void task_b_main(struct SHEET *sht_back);
 
 void HariMain(void){
@@ -21,7 +19,7 @@ void HariMain(void){
 	struct TIMER *timer, *timer2, *timer3, *timer_1s;
 	// Keyboard and Mouse
 	char s[40];
-	int mx, my;
+	int mx, my,cursor_x,cursor_c;
 	struct MOUSE_DEC mdec;
 	unsigned char buf_mouse[256];
 	// Memory
@@ -32,9 +30,9 @@ void HariMain(void){
 	struct SHEET *sht_back, *sht_mouse, *sht_win;
 	unsigned char *buf_back, *buf_win;
 	// Task
-	struct TASK *task_b;
+	struct TASK *task_a, *task_b;
 	// Others
-	int i,count=0,cursor_x,cursor_c,task_b_esp;
+	int i,count=0;
 	struct Queue fifo;
 	int fifobuf[128];
 
@@ -45,7 +43,7 @@ void HariMain(void){
 	init_pit();
 	io_out8(PIC0_IMR, 0xf8); //开放PIT,PIC1和键盘中断
 	io_out8(PIC1_IMR, 0xef); //开放鼠标中断
-	que_init(&fifo, 128, fifobuf);
+	que_init(&fifo, 128, fifobuf, 0);
 	init_palette();
 
 	//计时器
@@ -87,9 +85,9 @@ void HariMain(void){
 	sheet_updown(sht_back,  0);
 	sheet_updown(sht_win,   1);
 	sheet_updown(sht_mouse, 2);
-	*((int *) 0x0fec) = (int) sht_back;
 	// 多任务
-	task_init(memman);
+	task_a = task_init(memman);
+	fifo.task = task_a;
 	task_b = task_alloc();
 	task_b->tss.esp = memman_alloc_4k(memman, 64 * 1024) + 64 * 1024 - 8;
 	task_b->tss.eip = (int) &task_b_main;
@@ -111,8 +109,10 @@ void HariMain(void){
 
 	for(;;){
 		io_cli();   //屏蔽中断
-		if(que_status(&fifo) == 0)
-			io_stihlt();
+		if(que_status(&fifo) == 0){
+			task_sleep(task_a);
+			io_sti();
+		}
 		else{
 			i = que_pop(&fifo);
 			io_sti();
@@ -184,7 +184,7 @@ void task_b_main(struct SHEET *sht_back){
 	char s[12];
 	
 
-	que_init(&fifo, 128, fifobuf);
+	que_init(&fifo, 128, fifobuf, 0);
 	timer_1s = timer_alloc();
 	timer_init(timer_1s, &fifo, 100);
 	timer_settime(timer_1s, 100);

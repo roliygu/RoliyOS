@@ -108,8 +108,9 @@ typedef int Type;
 struct Queue {
 	Type *buf;
 	int start, end, size, free, flags;
+	struct TASK *task;
 };
-void que_init(struct Queue *Q, int size, Type *buf);
+void que_init(struct Queue *Q, int size, Type *buf, struct TASK *task);
 int que_push(struct Queue *Q, Type data);
 int que_pop(struct Queue *Q);
 int que_status(struct Queue *Q);
@@ -212,7 +213,7 @@ void asm_inthandler20(void);
 void inthandler20(int *esp);
 struct TIMER *timer_alloc(void);
 void timer_free(struct TIMER *timer);
-void timer_init(struct TIMER *timer, struct Queue *fifo, unsigned char data);
+void timer_init(struct TIMER *timer, struct Queue *fifo, int data);
 void timer_settime(struct TIMER *timer, unsigned int timeout);
 
 // task.c
@@ -225,20 +226,29 @@ struct TSS32{
 	int ldtr, iomap;
 };
 struct TASK{
+	// sel存放段号,
+	// flags=2表示本进程在CPU中执行,flags=0表示本进程的内存未使用,
+	//flags=1表示本进程已经被初始化,但不是CPU运行状态
+	
 	int sel, flags;
 	struct TSS32 tss;
 };
 struct TASKCTL{
+	// running:进程数组中进程个数
+	// now:正在运行的任务下标
+	// 以链表的形式来组织进程
 	int running;
 	int now;
 	struct TASK *tasks[MAX_TASKS];
 	struct TASK tasks0[MAX_TASKS];
 };
+extern struct TIMER *task_timer;
 void load_tr(int t);
 void farjmp(int eip, int cs);
 struct TASK *task_init(struct MEMMAN *memman);
 struct TASK *task_alloc(void);
 void task_run(struct TASK *task);
 void task_switch(void);
+void task_sleep(struct TASK *task);
 
 #endif

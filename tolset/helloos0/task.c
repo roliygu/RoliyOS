@@ -50,24 +50,54 @@ struct TASK *task_alloc(void){
 	return 0; // 全部正在使用
 }
 
-void task_run(struct TASK *task)
-{
+void task_run(struct TASK *task){
 	task->flags = 2; // 活动中标志
 	taskctl->tasks[taskctl->running] = task;
 	taskctl->running++;
 	return;
 }
 
-void task_switch(void)
-{
+void task_switch(void){
+	// 切换进程
 	timer_settime(task_timer, 2);
 	if (taskctl->running >= 2) {
-		taskctl->now++;
-		if (taskctl->now == taskctl->running) {
-			taskctl->now = 0;
-		}
+		// 普通的顺序表
+		taskctl->now = (taskctl->now+1)%(taskctl->running);
 		farjmp(0, taskctl->tasks[taskctl->now]->sel);
 	}
 	return;
 }
-
+void task_sleep(struct TASK *task){
+	// 指定task转入休眠状态
+	// 休眠状态的意思是从taskctl维护的进程数组中移去,需要唤醒的时候再加进来
+	int i;
+	char ts = 0;
+	if (task->flags == 2) {		// 如果指定任务处于唤醒状态
+		if (task == taskctl->tasks[taskctl->now]) {
+			ts = 1; // 稍后再进行任务切换,延迟休眠自己是确保立马休眠的话,不造成不稳定状态..
+		}
+		// 从顺序表中移掉一个元素的固定操作
+		// 寻找task所在的位置
+		for (i = 0; i < taskctl->running; i++) 
+			if (taskctl->tasks[i] == task) 
+				break;
+		taskctl->running--;
+		if (i < taskctl->now) 
+			// 如果休眠(去掉)的进程是running态后面的,则不需要对正在运行的进程号做修正
+			// 否则,去掉以后,running态的进程向前挪一位,相对要修改taskctl的now标记
+			// 如果相等的话,也是不用做修正的,因为将其去掉以后,后面一个元素顶了i的位置,任务切换刚好切换到下一个进程
+			taskctl->now--; 
+		// 移动成员
+		for (; i < taskctl->running; i++) 
+			taskctl->tasks[i] = taskctl->tasks[i + 1];
+		task->flags = 1; // 不工作状态
+		if (ts != 0) {
+			// 只有在本进程被休眠了才需要切换到其他进程,否则只是从数组中移除
+			if (taskctl->now >= taskctl->running) 
+				// 如果now值出现异常,则进行修正
+				taskctl->now = 0;
+			farjmp(0, taskctl->tasks[taskctl->now]->sel);
+		}
+	}
+	return;
+}
