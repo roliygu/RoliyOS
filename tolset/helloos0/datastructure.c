@@ -21,8 +21,9 @@ int que_push(struct Queue *Q, Type data){
 	Q->buf[Q->end] = data;
 	Q->end = (Q->end+1) % Q->size;
 	Q->free--;
-	if(Q->task!=0 && Q->task->flags != 2)
+	if(Q->task!=0 && Q->task->flags != 2){
 		task_run(Q->task);
+	}
 	return 0;
 }
 
