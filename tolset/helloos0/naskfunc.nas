@@ -14,6 +14,7 @@
 		GLOBAL	_load_cr0, _store_cr0
 		GLOBAL	_asm_inthandler21, _asm_inthandler27, _asm_inthandler2c, _asm_inthandler20
 		GLOBAL	_memtest_sub
+		GLOBAL  _load_tr, _farjmp
 		EXTERN	_inthandler21, _inthandler27
 		EXTERN  _inthandler2c, _inthandler20
 
@@ -199,3 +200,12 @@ mts_fin:
 		POP		ESI
 		POP		EDI
 		RET
+
+_load_tr: 			; void load(int tr)
+		LTR 	[ESP+4]
+		RET
+
+_farjmp: 			; void farjmp(int eip, int cs)
+		JMP 	FAR [ESP+4]
+		RET
+

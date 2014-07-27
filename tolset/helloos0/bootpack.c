@@ -11,11 +11,14 @@ static char keytable[0x54] = {
 		'2', '3', '0', '.'
 	};
 
+struct TSS32 tss_a, tss_b;
+void task_b_main(struct SHEET *sht_back);
+
 void HariMain(void){
 	// BIOS
 	struct BOOTINFO *binfo = (struct BOOTINFO *) ADR_BOOTINFO;
 	// Timer
-	struct TIMER *timer, *timer2, *timer3;
+	struct TIMER *timer, *timer2, *timer3, *timer_1s;
 	// Keyboard and Mouse
 	char s[40];
 	int mx, my;
@@ -28,11 +31,12 @@ void HariMain(void){
 	struct SHTCTL *shtctl;
 	struct SHEET *sht_back, *sht_mouse, *sht_win;
 	unsigned char *buf_back, *buf_win;
+	// Task
+	struct TASK *task_b;
 	// Others
-	int i,count=0,cursor_x,cursor_c;
+	int i,count=0,cursor_x,cursor_c,task_b_esp;
 	struct Queue fifo;
 	int fifobuf[128];
-
 
 	// 初始化
 	init_gdtidt();
@@ -83,8 +87,21 @@ void HariMain(void){
 	sheet_updown(sht_back,  0);
 	sheet_updown(sht_win,   1);
 	sheet_updown(sht_mouse, 2);
+	*((int *) 0x0fec) = (int) sht_back;
+	// 多任务
+	task_init(memman);
+	task_b = task_alloc();
+	task_b->tss.esp = memman_alloc_4k(memman, 64 * 1024) + 64 * 1024 - 8;
+	task_b->tss.eip = (int) &task_b_main;
+	task_b->tss.es = 1 * 8;
+	task_b->tss.cs = 2 * 8;
+	task_b->tss.ss = 1 * 8;
+	task_b->tss.ds = 1 * 8;
+	task_b->tss.fs = 1 * 8;
+	task_b->tss.gs = 1 * 8;
+	*((int *) (task_b->tss.esp + 4)) = (int) sht_back;
+	task_run(task_b);
 	// 显示
-	
 	sprintf(s, "memory %dMB   free : %dKB",
 			memtotal / (1024 * 1024), memman_total(memman) / 1024);
 	putfonts8_asc_sht(sht_back, 0, 32, COL8_FFFFFF, COL8_008484, s, 40);
@@ -93,8 +110,6 @@ void HariMain(void){
 	cursor_c = COL8_FFFFFF;
 
 	for(;;){
-		count++;
-
 		io_cli();   //屏蔽中断
 		if(que_status(&fifo) == 0)
 			io_stihlt();
@@ -145,11 +160,9 @@ void HariMain(void){
 				}
 			}else if (i == 10) { // data=10的timer
 				//putfonts8_asc_sht(sht_back, 0, 64, COL8_FFFFFF, COL8_008484, "10[sec]", 7);
-				//sprintf(s, "%010d", count);
-				//putfonts8_asc_sht(sht_win, 40, 28, COL8_000000, COL8_C6C6C6, s, 10);
+				//taskswitch4();
 			} else if (i == 3) { // data=3的timer
 				putfonts8_asc_sht(sht_back, 0, 80, COL8_FFFFFF, COL8_008484, "3[sec]", 6);
-				count = 0; // ‘ª’èŠJŽn 
 			} else if (i == 1) { // data=1的timer
 				timer_init(timer3, &fifo, 0); 
 				boxfill8(buf_back, binfo->scrnx, COL8_FFFFFF, 8, 96, 15, 111);
@@ -160,6 +173,42 @@ void HariMain(void){
 				boxfill8(buf_back, binfo->scrnx, COL8_008484, 8, 96, 15, 111);
 				timer_settime(timer3, 50);
 				sheet_refresh(sht_back, 8, 96, 16, 112);
+			}
+		}
+	}
+}
+void task_b_main(struct SHEET *sht_back){
+	struct Queue fifo;
+	struct TIMER *timer_1s, *timer_put;
+	int i, fifobuf[128], count =0, count0 = 0;
+	char s[12];
+	
+
+	que_init(&fifo, 128, fifobuf);
+	timer_1s = timer_alloc();
+	timer_init(timer_1s, &fifo, 100);
+	timer_settime(timer_1s, 100);
+	timer_put = timer_alloc();
+	timer_init(timer_put, &fifo, 1);
+	timer_settime(timer_put, 1);
+
+	for(;;){
+		count++;
+		io_cli();
+		if(que_status(&fifo) == 0){
+			io_sti();
+		}else{
+			i = que_pop(&fifo);
+			io_sti();
+			if(i == 2){
+				sprintf(s, "%11d", count);
+				putfonts8_asc_sht(sht_back, 0, 144, COL8_FFFFFF, COL8_008484, s, 11);
+				timer_settime(timer_1s, 2);
+			}else if(i == 1){
+				sprintf(s, "%11d", count - count0);
+				putfonts8_asc_sht(sht_back, 0, 128, COL8_FFFFFF, COL8_008484, s, 11);
+				count0 = count;
+				timer_settime(timer_put, 1);
 			}
 		}
 	}

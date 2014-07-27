@@ -1,6 +1,7 @@
 #include "bootpack.h"
 
 struct TIMERCTL timerctl;
+extern struct TIMER *task_timer;
 
 void init_pit(){
 	int i;
@@ -70,6 +71,7 @@ void timer_settime(struct TIMER *timer, unsigned int timeout){
 }
 void inthandler20(int *esp){
 	struct TIMER *timer;
+	char ts = 0;
 	io_out8(PIC0_OCW2, 0x60);	// 把IRQ-00接收信号结束的信息通知给PIC
 	timerctl.count++;
 	if (timerctl.next > timerctl.count) {
@@ -83,10 +85,15 @@ void inthandler20(int *esp){
 		}
 		// 超时
 		timer->flags = TIMER_FLAGS_ALLOC;
-		que_push(timer->fifo, timer->data);
+		if(timer != task_timer)
+			que_push(timer->fifo, timer->data);
+		else
+			ts = 1;
 		timer = timer->next; // 将下一个定时器的地址赋给timer
 	}
 	timerctl.t0 = timer;
 	timerctl.next = timer->timeout;
+	if(ts != 0)
+		task_switch();
 	return;
 }

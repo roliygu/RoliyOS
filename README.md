@@ -309,6 +309,11 @@ RoliyOS-My small OS
 	8. settime():设定timeout,将该timer插入到合适的timers链表中
 	9. 然后就等着中断函数通知timeout到了,然后执行后续动作
 	
+###多任务
+* Jmp跳转命令中有有near和far跳转之分,far特指段地址也改变的跳转：使用`JMP FAR`就能从指定内存地址读到段地址和偏移地址
+* CPU每次执行带有段地址的指令时，都会去确认一下GDT中的设置，以确定要执行的JMP是普通的far-JMP，还是任务切换
+* 
+
 
 ###内存分布
 	0x00000000 - 0x000fffff :BIOS显存之类(1M)
