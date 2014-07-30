@@ -220,6 +220,8 @@ void timer_settime(struct TIMER *timer, unsigned int timeout);
 // task.c
 #define MAX_TASKS 		1000
 #define TASK_GDT0 		3
+#define MAX_TASKS_LV	100
+#define MAX_TASKLEVELS	10
 struct TSS32{
 	int backlink, esp0, ss0, eap1, ss1, esp2, ss2, cr3;
 	int eip, eflags, eax, ecx, edx, ebx, esp, ebp, esi, edi;
@@ -230,17 +232,24 @@ struct TASK{
 	// sel存放段号,
 	// flags=2表示本进程在CPU中执行,flags=0表示本进程的内存未使用,
 	//flags=1表示本进程已经被初始化,但不是CPU运行状态
-	
+	// priority表示权限
 	int sel, flags;
+	int level, priority;
 	struct TSS32 tss;
 };
-struct TASKCTL{
+struct TASKLEVEL{
 	// running:进程数组中进程个数
 	// now:正在运行的任务下标
-	// 以链表的形式来组织进程
 	int running;
 	int now;
-	struct TASK *tasks[MAX_TASKS];
+	struct TASK *tasks[MAX_TASKS_LV];
+};
+struct TASKCTL{
+	// now_lv 现在活动中的Level
+	// 下次任务切换时,是否需要修改Level
+	int now_lv;
+	char lv_change;
+	struct TASKLEVEL level[MAX_TASKLEVELS];
 	struct TASK tasks0[MAX_TASKS];
 };
 extern struct TIMER *task_timer;
@@ -248,8 +257,13 @@ void load_tr(int t);
 void farjmp(int eip, int cs);
 struct TASK *task_init(struct MEMMAN *memman);
 struct TASK *task_alloc(void);
-void task_run(struct TASK *task);
+struct TASK *task_now(void);
+void task_add(struct TASK *task);
+void task_remove(struct TASK *task);
+void task_run(struct TASK *task, int level, int priority);
 void task_switch(void);
+void task_switchsub(void);
 void task_sleep(struct TASK *task);
+void task_idle(void);
 
 #endif

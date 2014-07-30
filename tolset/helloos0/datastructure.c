@@ -22,7 +22,7 @@ int que_push(struct Queue *Q, Type data){
 	Q->end = (Q->end+1) % Q->size;
 	Q->free--;
 	if(Q->task!=0 && Q->task->flags != 2){
-		task_run(Q->task);
+		task_run(Q->task, -1, 0);
 	}
 	return 0;
 }
