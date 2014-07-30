@@ -73,6 +73,7 @@ void putfonts8_asc_sht(struct SHEET *sht, int x, int y, int c, int b, char *s, i
 void init_screen8(char *vram, int x, int y);
 void init_mouse_cursor8(char *mouse, char bc);
 void init_window8(unsigned char *buf, int xsize, int ysize, char *title, char act);
+void make_wtitle8(unsigned char *buf, int xsize, char *title, char act);
 void putfont8(char *vram, int xsize, int x, int y, char c, char *font);
 void putfonts8_asc(char *vram, int xsize, int x, int y, char c, unsigned char *s);
 void putblock8_8(char *vram, int vxsize, int pxsize,
@@ -137,8 +138,9 @@ int mouse_decode(struct MOUSE_DEC *mdec, unsigned char dat);
 #define KBC_MODE				0x47 	  // 利用鼠标模式
 #define KEYCMD_SENDTO_MOUSE		0xd4
 #define MOUSECMD_ENABLE			0xf4
-//static
-extern char keytable[0x54];
+#define KEYCMD_LED 				0xed
+extern char keytable0[0x80];
+extern char keytable1[0x80];
 // dsctbl.c 
 struct SEGMENT_DESCRIPTOR {
 	short limit_low, base_low;
@@ -235,6 +237,7 @@ struct TASK{
 	// priority表示权限
 	int sel, flags;
 	int level, priority;
+	struct Queue fifo;
 	struct TSS32 tss;
 };
 struct TASKLEVEL{
