@@ -129,7 +129,7 @@ void inthandler21(int *esp);
 void inthandler2c(int *esp);
 void wait_KBC_sendready(void);
 void init_keyboard(struct Queue *fifo, int data0);
-void enable_mouse(struct Queue *fifo, int data0, struct MOUSE_DEC *mdec);
+void init_mouse(struct Queue *fifo, int data0, struct MOUSE_DEC *mdec);
 int mouse_decode(struct MOUSE_DEC *mdec, unsigned char dat);
 #define PORT_KEYSTA				0x0064    //设备编码
 #define PORT_KEYCMD				0x0064

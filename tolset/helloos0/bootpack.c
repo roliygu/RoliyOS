@@ -3,14 +3,13 @@
 
 void console_task(struct SHEET *sheet);
 
-
 void HariMain(void){
 	// BIOS
 	struct BOOTINFO *binfo = (struct BOOTINFO *) ADR_BOOTINFO;
 	// Others
-	int i, key_to=0, key_shift=0, key_leds=(binfo->leds>>4)&7, keycmd_wait=-1;
-	struct Queue fifo, keycmd;
-	int fifobuf[128], keycmd_buf[32];
+	int i;
+	struct Queue fifo;
+	int fifobuf[128];
 	// Memory
 	struct MEMMAN *memman = (struct MEMMAN *) MEMMAN_ADDR;
 	unsigned int memtotal;
@@ -20,8 +19,10 @@ void HariMain(void){
 	struct TASK *task_a, *task_cons;
 	// Keyboard and Mouse
 	char s[40];
-	int mx, my,cursor_x,cursor_c;
+	int mx, my, cursor_x, cursor_c, key_to=0, key_shift=0, 
+		key_leds=(binfo->leds>>4)&7, keycmd_wait=-1, keycmd_buf[32];
 	struct MOUSE_DEC mdec;
+	struct Queue keycmd;
 	unsigned char buf_mouse[256];
 	// Sheets
 	struct SHTCTL *shtctl;
@@ -31,11 +32,13 @@ void HariMain(void){
 	// 初始化
 	init_gdtidt();
 	init_pic();
-	io_sti();  // IDT/PIC初始化完成，开放CPU中断
-	init_pit();
+	io_sti();  						// IDT/PIC初始化完成，开放CPU中断
+	init_pit(); 					// 计时器
+	que_init(&fifo, 128, fifobuf, 0);
+	init_keyboard(&fifo, 256);		// 键盘
+	init_mouse(&fifo, 512, &mdec);  // 鼠标
 	io_out8(PIC0_IMR, 0xf8); //开放PIT,PIC1和键盘中断
 	io_out8(PIC1_IMR, 0xef); //开放鼠标中断
-	que_init(&fifo, 128, fifobuf, 0);
 	que_init(&keycmd, 32, keycmd_buf, 0);
 	init_palette();
 	
@@ -47,36 +50,48 @@ void HariMain(void){
 	// 多任务
 	task_a = task_init(memman);
 	fifo.task = task_a;
-	task_run(task_a, 1, 0);
+	task_run(task_a, 1, 2);
 	//计时器
 	timer = timer_alloc();
 	timer_init(timer, &fifo, 1);
 	timer_settime(timer, 50);
 	//键鼠
-	init_keyboard(&fifo, 256);
-	enable_mouse(&fifo, 512, &mdec);
-	mx = (binfo->scrnx - 16) / 2; //让鼠标坐标在正中间
+	mx = (binfo->scrnx - 16) / 2; 
 	my = (binfo->scrny - 28 - 16) / 2;
 	//图层
 	shtctl = shtctl_init(memman, binfo->vram, binfo->scrnx, binfo->scrny);
+	// 四个图层
+	// 1. background
 	sht_back  = sheet_alloc(shtctl);
-	sht_win   = sheet_alloc(shtctl);
-	sht_mouse = sheet_alloc(shtctl);
-	sht_cons  = sheet_alloc(shtctl);
 	buf_back  = (unsigned char *) memman_alloc_4k(memman, binfo->scrnx * binfo->scrny);
-	buf_win   = (unsigned char *) memman_alloc_4k(memman, 160 * 52);
-	buf_cons  = (unsigned char *) memman_alloc_4k(memman, 256*165);
 	sheet_setbuf(sht_back, buf_back, binfo->scrnx, binfo->scrny, -1); 
-	sheet_setbuf(sht_win, buf_win, 144, 52, -1); 
-	sheet_setbuf(sht_mouse, buf_mouse, 16, 16, 99);
-	sheet_setbuf(sht_cons, buf_cons, 256, 165, -1);
 	init_screen8(buf_back, binfo->scrnx, binfo->scrny);
-	init_mouse_cursor8(buf_mouse, 99);
-	init_window8(buf_win, 144, 52, "task_a", 1);
+	sheet_slide(sht_back, 0, 0);
+	sheet_updown(sht_back,  0);	
+	// 2. window_cons
+	sht_cons  = sheet_alloc(shtctl);
+	buf_cons  = (unsigned char *) memman_alloc_4k(memman, 256*165);
+	sheet_setbuf(sht_cons, buf_cons, 256, 165, -1);
 	init_window8(buf_cons, 256, 165, "console", 0);
-	make_textbox8(sht_win, 8, 28, 128, 16, COL8_FFFFFF);
 	make_textbox8(sht_cons, 8, 28, 240, 128, COL8_000000);
-	
+	sheet_slide(sht_cons, 32, 4);
+	sheet_updown(sht_cons, 1);
+	// 3. window_one
+	sht_win   = sheet_alloc(shtctl);
+	buf_win   = (unsigned char *) memman_alloc_4k(memman, 160 * 52);
+	sheet_setbuf(sht_win, buf_win, 144, 52, -1); 
+	init_window8(buf_win, 144, 52, "Window", 1);
+	make_textbox8(sht_win, 8, 28, 128, 16, COL8_FFFFFF);
+	sheet_slide(sht_win, 8, 56);
+	sheet_updown(sht_win, 2);
+	// 4. mouse
+	sht_mouse = sheet_alloc(shtctl);
+	// 鼠标图层不用额外分配buf
+	sheet_setbuf(sht_mouse, buf_mouse, 16, 16, 99);
+	init_mouse_cursor8(buf_mouse, 99);	
+	sheet_slide(sht_mouse, mx, my);
+	sheet_updown(sht_mouse, 3);
+	// ******给console分配一个进程******
 	task_cons = task_alloc();
 	task_cons->tss.esp = memman_alloc_4k(memman, 64 * 1024) + 64 * 1024 - 8;
 	task_cons->tss.eip = (int) &console_task;
@@ -88,17 +103,8 @@ void HariMain(void){
 	task_cons->tss.gs = 1 * 8;
 	*((int *) (task_cons->tss.esp + 4)) = (int) sht_cons;
 	task_run(task_cons, 2, 2);
-	sheet_slide(sht_back, 0, 0);
-	sheet_slide(sht_cons, 32, 4);
-	sheet_slide(sht_win, 8, 56);
-	sheet_slide(sht_mouse, mx, my);
-	sheet_updown(sht_back,  0);
-	sheet_updown(sht_cons, 1);
-	sheet_updown(sht_win, 4);
-	sheet_updown(sht_mouse, 5);
-
+	// ******=====================******
 	// 显示
-	make_textbox8(sht_win, 8, 28, 144, 16, COL8_FFFFFF);
 	cursor_x = 8;
 	cursor_c = COL8_FFFFFF;
 	que_push(&keycmd, KEYCMD_LED);
@@ -106,11 +112,12 @@ void HariMain(void){
 
 	for(;;){
 		if(que_status(&keycmd)>0 && keycmd_wait<0){
+			// 如果存在向键盘控制器发送的数据
 			keycmd_wait = que_pop(&keycmd);
 			wait_KBC_sendready();
 			io_out8(PORT_KEYDAT, keycmd_wait);
 		}
-		io_cli();   //屏蔽中断
+		io_cli();   
 		if(que_status(&fifo) == 0){
 			task_sleep(task_a);
 			io_sti();

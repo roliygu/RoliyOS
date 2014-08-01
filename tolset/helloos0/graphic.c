@@ -210,6 +210,7 @@ void putblock8_8(char *vram, int vxsize, int pxsize,
 	return;
 }
 void make_textbox8(struct SHEET *sht, int x0, int y0, int sx, int sy, int c){
+	// 刷成白色,当输入框
 	int x1 = x0 + sx, y1 = y0 + sy;
 	boxfill8(sht->buf, sht->bxsize, COL8_848484, x0 - 2, y0 - 3, x1 + 1, y0 - 3);
 	boxfill8(sht->buf, sht->bxsize, COL8_848484, x0 - 3, y0 - 3, x0 - 3, y1 + 1);
